@@ -1,0 +1,44 @@
+{
+  "mushroom": {
+    "name": "Мухомор",
+    "type": "material",
+    "rarity": "COMMON",
+    "value": 5,
+    "description": "Красный гриб с белыми точками. Обладает слабыми магическими свойствами.",
+    "collectable": true,
+    "required_skills": {
+      "herbalism": 1
+    },
+    "skill_exp": {
+      "herbalism": 10
+    }
+  },
+  "beast_plant": {
+    "name": "Зверобой",
+    "type": "material",
+    "rarity": "COMMON",
+    "value": 15,
+    "description": "Растение с жёлтыми цветками. Используется в лечебных целях.",
+    "collectable": true,
+    "required_skills": {
+      "herbalism": 1
+    },
+    "skill_exp": {
+      "herbalism": 15
+    }
+  },
+  "wolfbane": {
+    "name": "Волчья погибель",
+    "type": "material",
+    "rarity": "UNCOMMON",
+    "value": 20,
+    "description": "Растение с фиолетовыми цветками. Ядовитое, но важное для алхимии.",
+    "collectable": true,
+    "required_skills": {
+      "herbalism": 1
+    },
+    "skill_exp": {
+      "herbalism": 15
+    }
+  }
+}

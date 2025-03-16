@@ -1,0 +1,61 @@
+{
+  "village_elder": {
+    "name": "Старейшина деревни",
+    "description": "Мудрый старец, который руководит деревней много лет.",
+    "type": "quest",
+    "location_id": "village",
+    "available_quests": ["collect_herbs", "wolves_threat", "missing_child"],
+    "dialogues": {
+      "greeting": {
+        "text": "Приветствую тебя, путешественник. Наша деревня нуждается в помощи.",
+        "options": [
+          {
+            "text": "Чем я могу помочь?",
+            "next_id": "help_options"
+          },
+          {
+            "text": "Расскажи о деревне",
+            "next_id": "about_village"
+          },
+          {
+            "text": "До свидания",
+            "action": "exit"
+          }
+        ]
+      },
+      "help_options": {
+        "text": "У нас несколько проблем, с которыми ты мог бы помочь.",
+        "options": [
+          {
+            "text": "Нужны травы для лекаря",
+            "action": "start_quest_collect_herbs",
+            "condition": "quest_available_collect_herbs"
+          },
+          {
+            "text": "Проблема с волками",
+            "action": "start_quest_wolves_threat",
+            "condition": "quest_available_wolves_threat"
+          },
+          {
+            "text": "Пропавший ребёнок",
+            "action": "start_quest_missing_child",
+            "condition": "quest_available_missing_child"
+          },
+          {
+            "text": "Вернуться",
+            "next_id": "greeting"
+          }
+        ]
+      },
+      "about_village": {
+        "text": "Наша деревня основана более 200 лет назад. Мы живем в гармонии с лесом и занимаемся в основном земледелием и охотой.",
+        "options": [
+          {
+            "text": "Вернуться",
+            "next_id": "greeting"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "iron_ore": {
+    "name": "Железная руда",
+    "type": "material",
+    "rarity": "COMMON",
+    "value": 10,
+    "description": "Кусок необработанной железной руды.",
+    "collectable": true,
+    "required_skills": {
+      "mining": 1
+    },
+    "skill_exp": {
+      "mining": 15
+    }
+  },
+  "copper_ore": {
+    "name": "Медная руда",
+    "type": "material",
+    "rarity": "COMMON",
+    "value": 8,
+    "description": "Кусок необработанной медной руды.",
+    "collectable": true,
+    "required_skills": {
+      "mining": 1
+    },
+    "skill_exp": {
+      "mining": 12
+    }
+  }
+}

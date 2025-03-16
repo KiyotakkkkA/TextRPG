@@ -1,0 +1,64 @@
+{
+  "herb_trader": {
+    "name": "Травник Миран",
+    "description": "Старый травник, который знает все о растениях.",
+    "type": "trader",
+    "location_id": "forest",
+    "buys": {
+      "mushroom": 1,
+      "wolfbane": 1,
+      "beast_plant": 2
+    },
+    "sells": {
+      "mushroom": {
+        "price": 10,
+        "count": 5
+      },
+      "wolfbane": {
+        "price": 10,
+        "count": 5
+      }
+    },
+    "dialogues": {
+      "greeting": {
+        "text": "Здравствуй, путник! Хочешь обменять растения на зелья?",
+        "options": [
+          {
+            "text": "Что ты покупаешь?",
+            "next_id": "buy_info"
+          },
+          {
+            "text": "Что ты продаешь?",
+            "next_id": "sell_info"
+          },
+          {
+            "text": "Давай торговать",
+            "action": "trade"
+          },
+          {
+            "text": "До свидания",
+            "action": "exit"
+          }
+        ]
+      },
+      "buy_info": {
+        "text": "Я покупаю любые травы и грибы, особенно интересуюсь редкими растениями вроде Волчьей погибели.",
+        "options": [
+          {
+            "text": "Вернуться",
+            "next_id": "greeting"
+          }
+        ]
+      },
+      "sell_info": {
+        "text": "У меня есть лечебные зелья и семена растений для твоего сада.",
+        "options": [
+          {
+            "text": "Вернуться",
+            "next_id": "greeting"
+          }
+        ]
+      }
+    }
+  }
+}

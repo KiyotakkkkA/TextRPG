@@ -1,0 +1,16 @@
+{
+  "air_essence": {
+    "name": "Воздушная эссенция",
+    "description": "Концентрированная магическая сущность воздуха. Используется в высокоуровневых зельях и зачарованиях.",
+    "type": "material",
+    "value": 5,
+    "rarity": "COMMON",
+    "collectable": true,
+    "required_skills": {
+      "elementalism": 1
+    },
+    "skill_exp": {
+      "elementalism": 20
+    }
+  }
+}

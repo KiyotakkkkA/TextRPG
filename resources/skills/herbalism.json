@@ -1,0 +1,22 @@
+{
+  "id": "herbalism",
+  "name": "Травничество",
+  "description": "Сбор растений и их использование",
+  "max_level": 100,
+  "base_exp": 100,
+  "exp_factor": 1.4,
+  "levels": [
+    {
+      "level": 1,
+      "unlocks": ["mushroom"]
+    },
+    {
+      "level": 3,
+      "unlocks": ["wolfbane"]
+    },
+    {
+      "level": 5,
+      "unlocks": ["beast_plant"]
+    }
+  ]
+}

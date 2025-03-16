@@ -1,0 +1,13 @@
+{
+  "id": "mining",
+  "name": "Горное дело",
+  "description": "Добыча руды и других полезных ископаемых",
+  "max_level": 100,
+  "experience_scale": 100,
+  "levels": [
+    {
+      "level": 1,
+      "unlocks": ["iron_ore", "copper_ore"]
+    }
+  ]
+}
