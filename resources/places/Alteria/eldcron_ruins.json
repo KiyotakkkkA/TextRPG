@@ -1,0 +1,148 @@
+{
+  "locations": [
+    {
+      "id": "ancient_eldcron_ruins",
+      "name": "Руины древнего Эльдкрона",
+      "description": "Остатки некогда величественной столицы мира. Огромные полуразрушенные здания и разбитые улицы свидетельствуют о былом величии. В центре руин можно увидеть гигантский кратер — место, где когда-то находился Великий Кристалл. Воздух здесь наполнен мерцающими частицами кристальной пыли, а ночью руины светятся мягким голубоватым светом.",
+      "is_safe": false,
+      "effects": {
+        "crystal_resonance": {
+          "description": "Близость к месту Раскола усиливает все магические способности, но также делает осколки более нестабильными",
+          "stat_boost": {
+            "magic_power": 10,
+            "crystal_detection_range": 20
+          },
+          "stat_penalty": {
+            "shard_stability": -15
+          }
+        }
+      },
+      "resources": {
+        "crystal_dust": {
+          "max_count": 10,
+          "respawn_time": 3600,
+          "required_skills": {
+            "crystal_sensing": 1
+          }
+        },
+        "crystal_fragment": {
+          "max_count": 5,
+          "respawn_time": 7200,
+          "required_skills": {
+            "crystal_sensing": 3
+          }
+        },
+        "resonating_crystal_fragment": {
+          "max_count": 1,
+          "respawn_time": -1,
+          "respawn_conditions": {
+            "quest_stage": "awakening_seeker_unusual_shard"
+          },
+          "required_skills": {
+            "crystal_sensing": 1
+          }
+        }
+      },
+      "monsters": {
+        "crystal_construct": {
+          "max_count": 5,
+          "respawn_time": 1800,
+          "level_range": [3, 6]
+        },
+        "twisted_rat": {
+          "max_count": 8,
+          "respawn_time": 900,
+          "level_range": [2, 4]
+        }
+      }
+    },
+    {
+      "id": "crystal_lab",
+      "name": "Лаборатория кристаллов",
+      "description": "Просторное помещение в Академии, заполненное столами с различным оборудованием для изучения и обработки осколков. Повсюду стоят защитные экраны, а вдоль стен расположены контейнеры с осколками разных типов. В центре находится большой стол стабилизации — устройство для безопасной работы с нестабильными осколками.",
+      "is_safe": true,
+      "resources": {
+        "crystal_dust": {
+          "max_count": 5,
+          "respawn_time": 1800,
+          "required_skills": {
+            "crystal_sensing": 1
+          }
+        }
+      },
+      "interactive_objects": [
+        {
+          "id": "stabilization_table",
+          "name": "Стол стабилизации",
+          "description": "Массивный стол с кристальной плитой в центре, окружённой серебряными контурами. Используется для стабилизации осколков и безопасного извлечения их энергии.",
+          "interactions": [
+            {
+              "type": "examine",
+              "text": "Стол стабилизации — сложное устройство, созданное магами-инженерами Академии. Серебряные контуры на его поверхности формируют стабилизирующий резонанс, который подавляет хаотичные энергетические выбросы осколков."
+            },
+            {
+              "type": "use",
+              "text": "Вы активируете стол, и серебряные линии начинают светиться мягким голубым светом. Вы чувствуете, как ваша связь с осколками усиливается в поле стабилизации.",
+              "effects": [
+                {
+                  "type": "temporary_buff",
+                  "buff_id": "stabilization_field",
+                  "duration": 300,
+                  "stats": {
+                    "shard_stability_bonus": 30,
+                    "crystal_manipulation": 15
+                  }
+                }
+              ],
+              "progress_quest": {
+                "quest_id": "awakening_seeker",
+                "objective_id": "use_stabilization_table"
+              }
+            }
+          ]
+        },
+        {
+          "id": "crystal_analyzer",
+          "name": "Кристальный анализатор",
+          "description": "Устройство с множеством линз и датчиков, позволяющее изучать внутреннюю структуру осколков.",
+          "interactions": [
+            {
+              "type": "examine",
+              "text": "Кристальный анализатор состоит из системы магических линз, которые позволяют видеть энергетические потоки внутри осколков. Судя по всему, это новейшая модель, разработанная недавно."
+            },
+            {
+              "type": "use",
+              "text": "Вы помещаете осколок в анализатор и активируете его. Устройство проецирует в воздух трёхмерную схему энергетических потоков внутри осколка.",
+              "required_items": [
+                {
+                  "item_id": "crystal_fragment",
+                  "consume": false
+                }
+              ],
+              "effects": [
+                {
+                  "type": "add_knowledge",
+                  "knowledge_id": "crystal_lore",
+                  "exp": 10
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "npcs": ["lab_assistant_mirren"]
+    }
+  ],
+  "connections": [
+    {
+      "from": "new_eldcron_city",
+      "to": "ancient_eldcron_ruins",
+      "bidirectional": true
+    },
+    {
+      "from": "academy_district",
+      "to": "crystal_lab",
+      "bidirectional": true
+    }
+  ]
+}

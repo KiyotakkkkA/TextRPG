@@ -36,8 +36,13 @@ def print_tracked_target(self):
             print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}   {Fore.LIGHTCYAN_EX}Полный маршрут:{Style.RESET_ALL}", end="")
             
             # Текущая локация игрока
-            current_location = self.game.player.current_location
-            print(f" {current_location.name}", end="")
+            current_location_id = self.game.player.current_location
+            current_location = self.game.get_location(current_location_id)
+            
+            if current_location:
+                print(f" {current_location.name}", end="")
+            else:
+                print(f" Неизвестная локация", end="")
             
             # Промежуточные локации маршрута
             for i, loc_id in enumerate(path):

@@ -45,8 +45,17 @@ class Inventory:
 
     def add_item(self, item: InventoryItem):
         if item is not None:
+            # Проверяем, есть ли уже такой предмет в инвентаре
+            for existing_item in self.items:
+                if hasattr(existing_item, 'id') and hasattr(item, 'id') and existing_item.id == item.id:
+                    # Предмет с таким ID уже есть, увеличиваем количество
+                    existing_item.set_count(existing_item.get_count() + item.get_count())
+                    self.logger.debug("Увеличено количество предмета {} до {}", existing_item.name, existing_item.get_count())
+                    return
+            
+            # Если предмет не найден, добавляем новый
             self.items.append(item)
-            self.logger.debug("Добавлен предмет {} ({})", item.name, item.get_rarity())
+            self.logger.debug("Добавлен новый предмет {} ({})", item.name, item.get_rarity())
         else:
             self.logger.warning("Попытка добавить None в инвентарь")
 

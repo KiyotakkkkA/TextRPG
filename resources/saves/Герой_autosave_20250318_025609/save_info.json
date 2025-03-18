@@ -1,0 +1,9 @@
+{
+    "playername": "Герой",
+    "player_level": 1,
+    "current_location": "Новый Эльдкрон",
+    "current_location_id": "new_eldcron_city",
+    "worldfile": "world.dat",
+    "save_time": "2025-03-18 02:56:09",
+    "game_version": "1.0"
+}

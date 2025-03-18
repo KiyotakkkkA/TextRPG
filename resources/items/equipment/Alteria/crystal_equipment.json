@@ -1,0 +1,93 @@
+{
+  "crystal_focus": {
+    "name": "Кристальный фокус",
+    "description": "Специальный инструмент для Искателей, помогающий концентрировать и направлять энергию осколков. Представляет собой серебряную оправу с установленным кристальным фрагментом.",
+    "type": "equipment",
+    "subtype": "accessory",
+    "slot": "offhand",
+    "rarity": "uncommon",
+    "level": 5,
+    "value": 150,
+    "weight": 0.8,
+    "characteristics": {
+      "magic_power": 10,
+      "crystal_detection_range": 5,
+      "mana_regeneration": 2
+    },
+    "requirements": {
+      "level": 3,
+      "skills": {
+        "crystal_sensing": 2
+      }
+    },
+    "effects": {
+      "passive": [
+        {
+          "type": "skill_boost",
+          "skill_id": "crystal_sensing",
+          "bonus": 10
+        }
+      ]
+    },
+    "materials": [
+      {
+        "item_id": "silver_ingot",
+        "count": 1
+      },
+      {
+        "item_id": "crystal_fragment",
+        "count": 3
+      }
+    ]
+  },
+  "resonance_gloves": {
+    "name": "Резонансные перчатки",
+    "description": "Тонкие перчатки из особой ткани, с вплетёнными в неё кристальными нитями. Усиливают контакт Искателя с осколками и защищают руки при работе с нестабильными образцами.",
+    "type": "equipment",
+    "subtype": "armor",
+    "slot": "hands",
+    "rarity": "uncommon",
+    "level": 10,
+    "value": 300,
+    "weight": 0.5,
+    "characteristics": {
+      "defense": 5,
+      "magic_resist": 10,
+      "shard_stability_bonus": 15
+    },
+    "requirements": {
+      "level": 8,
+      "skills": {
+        "crystal_sensing": 5
+      }
+    },
+    "effects": {
+      "passive": [
+        {
+          "type": "skill_boost",
+          "skill_id": "crystal_sensing",
+          "bonus": 15
+        },
+        {
+          "type": "status_immunity",
+          "status": "crystal_burn",
+          "chance": 75
+        }
+      ]
+    },
+    "materials": [
+      {
+        "item_id": "enchanted_fabric",
+        "count": 2
+      },
+      {
+        "item_id": "crystal_dust",
+        "count": 10
+      },
+      {
+        "item_id": "minor_creation_shard",
+        "count": 1
+      }
+    ]
+  }
+}

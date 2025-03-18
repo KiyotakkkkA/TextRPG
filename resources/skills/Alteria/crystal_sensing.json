@@ -1,0 +1,156 @@
+{
+  "id": "crystal_sensing",
+  "name": "Кристальное чутье",
+  "description": "Врожденная способность Искателей чувствовать осколки Великого Кристалла, взаимодействовать с ними и извлекать их энергию. Этот навык позволяет находить, стабилизировать и использовать осколки разных типов.",
+  "max_level": 50,
+  "base_exp": 200,
+  "exp_factor": 1.5,
+  "levels": [
+    {
+      "level": 1,
+      "unlocks": ["crystal_dust", "crystal_fragment"],
+      "provides": {
+        "crystal_detection_range": 10,
+        "magic_power": 5
+      },
+      "message": "Вы начинаете чувствовать присутствие осколков на небольшом расстоянии. Можете собирать кристальную пыль и мелкие фрагменты."
+    },
+    {
+      "level": 3,
+      "unlocks": ["minor_creation_shard"],
+      "provides": {
+        "crystal_detection_range": 15,
+        "magic_power": 8,
+        "shard_stability_bonus": 5
+      },
+      "message": "Вы можете находить малые осколки созидания и чувствуете их на большем расстоянии."
+    },
+    {
+      "level": 5,
+      "unlocks": ["minor_mind_shard"],
+      "provides": {
+        "crystal_detection_range": 20,
+        "magic_power": 10,
+        "shard_stability_bonus": 10,
+        "crystal_resonance": 1
+      },
+      "message": "Вы можете обнаруживать малые осколки разума и начинаете резонировать с кристаллами, усиливая их свойства."
+    },
+    {
+      "level": 7,
+      "unlocks": ["shadow_essence"],
+      "provides": {
+        "crystal_detection_range": 25,
+        "magic_power": 12,
+        "shard_stability_bonus": 15,
+        "crystal_resonance": 2
+      },
+      "message": "Вы можете извлекать теневую эссенцию из осколков и теневых сущностей."
+    },
+    {
+      "level": 10,
+      "unlocks": ["elemental_essence", "void_fragment"],
+      "provides": {
+        "crystal_detection_range": 30,
+        "magic_power": 15,
+        "shard_stability_bonus": 20,
+        "crystal_resonance": 3,
+        "crystal_attunement": 1
+      },
+      "message": "Вы можете собирать элементальные эссенции и фрагменты пустоты. Начинаете настраиваться на определенные типы осколков для усиления их эффектов."
+    },
+    {
+      "level": 15,
+      "unlocks": ["water_shard"],
+      "provides": {
+        "crystal_detection_range": 40,
+        "magic_power": 20,
+        "shard_stability_bonus": 25,
+        "crystal_resonance": 4,
+        "crystal_attunement": 2,
+        "energy_extraction_efficiency": 5
+      },
+      "message": "Вы можете находить и стабилизировать водные осколки. Извлекаете больше энергии из осколков при их использовании."
+    },
+    {
+      "level": 20,
+      "unlocks": ["creation_shard", "mind_shard"],
+      "provides": {
+        "crystal_detection_range": 50,
+        "magic_power": 25,
+        "shard_stability_bonus": 30,
+        "crystal_resonance": 5,
+        "crystal_attunement": 3,
+        "energy_extraction_efficiency": 10,
+        "shard_vision": 1
+      },
+      "message": "Вы можете находить полноценные осколки созидания и разума. В медитации можете видеть события, связанные с найденными осколками."
+    },
+    {
+      "level": 25,
+      "unlocks": ["elemental_core"],
+      "provides": {
+        "crystal_detection_range": 60,
+        "magic_power": 30,
+        "shard_stability_bonus": 35,
+        "crystal_resonance": 6,
+        "crystal_attunement": 4,
+        "energy_extraction_efficiency": 15,
+        "shard_vision": 2,
+        "crystal_harmony": 1
+      },
+      "message": "Вы можете извлекать ядра элементалей. Научились гармонизировать несколько осколков, усиливая их совместное действие."
+    },
+    {
+      "level": 30,
+      "unlocks": ["distortion_shard"],
+      "provides": {
+        "crystal_detection_range": 75,
+        "magic_power": 35,
+        "shard_stability_bonus": 40,
+        "crystal_resonance": 7,
+        "crystal_attunement": 5,
+        "energy_extraction_efficiency": 20,
+        "shard_vision": 3,
+        "crystal_harmony": 2,
+        "reality_anchor": 1
+      },
+      "message": "Вы способны стабилизировать даже опасные осколки искажения. Ваше присутствие создает якорь реальности, сдерживающий пространственные аномалии."
+    },
+    {
+      "level": 40,
+      "unlocks": ["prismatic_shard"],
+      "provides": {
+        "crystal_detection_range": 100,
+        "magic_power": 45,
+        "shard_stability_bonus": 50,
+        "crystal_resonance": 9,
+        "crystal_attunement": 7,
+        "energy_extraction_efficiency": 30,
+        "shard_vision": 4,
+        "crystal_harmony": 3,
+        "reality_anchor": 2,
+        "crystal_mastery": 1
+      },
+      "message": "Вы обладаете способностью находить редчайшие призматические осколки - фрагменты самого сердца Великого Кристалла. Ваше мастерство в обращении с осколками непревзойденно."
+    },
+    {
+      "level": 50,
+      "unlocks": ["crystal_consciousness"],
+      "provides": {
+        "crystal_detection_range": 150,
+        "magic_power": 60,
+        "shard_stability_bonus": 60,
+        "crystal_resonance": 10,
+        "crystal_attunement": 10,
+        "energy_extraction_efficiency": 40,
+        "shard_vision": 5,
+        "crystal_harmony": 5,
+        "reality_anchor": 3,
+        "crystal_mastery": 3,
+        "shard_translation": 1
+      },
+      "message": "Вы достигли полного единения с осколками. Можете общаться с сознанием, сохранившимся в древних фрагментах Великого Кристалла, и узнавать тайны прошлого мира."
+    }
+  ]
+}

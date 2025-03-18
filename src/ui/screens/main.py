@@ -4,7 +4,7 @@ def main_menu(self):
     """Главное меню игры"""
     self.running = True
     current_option = 0
-    options = ["Начать игру", "Настройки", "Выход"]
+    options = ["Начать игру", 'Загрузить игру', "Настройки", "Выход"]
     
     while self.running:
         self.clear_screen()

@@ -1,7 +1,9 @@
 from src.models.inventory.Inventory import Inventory
 from src.models.inventory.InventoryItem import InventoryItem
 from src.models.inventory.types.Material import Material
+from src.models.inventory.types.Armor import Armor
 from src.models.skills.SkillSystem import SkillSystem
+from src.utils.Logger import Logger
 from colorama import Fore, Style
 
 class Player:
@@ -9,6 +11,7 @@ class Player:
         self.inventory = Inventory()
         self.current_location = None  # Текущая локация игрока
         self.skill_system = SkillSystem()
+        self.logger = Logger()
         # Путь к навыкам должен быть обновлен
         self.skill_system.load_skills("resources/skills")
         
@@ -26,9 +29,37 @@ class Player:
         self.stamina = 100
         self.max_stamina = 100
         
+        # Дополнительные боевые характеристики
+        self.dodge_chance = 10  # Шанс уклонения (в процентах)
+        self.crit_chance = 5    # Шанс критического удара (в процентах)
+        self.crit_damage = 1.5  # Множитель критического урона (х1.5)
+        
         # Ресурсы
         self.money = 0
-
+        
+        # Система экипировки
+        self.equipment = {
+            "head": None,       # Шлем/капюшон
+            "body": None,       # Броня/одежда
+            "legs": None,       # Штаны/поножи
+            "feet": None,       # Ботинки/сапоги
+            "hands": None,      # Перчатки/рукавицы
+            "weapon": None,     # Оружие
+            "offhand": None,    # Щит/второе оружие
+            "accessory1": None, # Кольцо/амулет/и т.д.
+            "accessory2": None  # Еще одно кольцо/амулет/и т.д.
+        }
+        
+        # Дополнительные бонусы от экипировки
+        self.equipment_bonuses = {
+            "defense": 0,
+            "attack": 0,
+            "magic": 0,
+            "dodge": 0,        # Бонус к шансу уклонения
+            "crit_chance": 0,  # Бонус к шансу крита
+            "crit_damage": 0   # Бонус к множителю крит. урона
+        }
+        
     def add_item(self, item: InventoryItem):
         self.inventory.add_item(item)
 
@@ -58,8 +89,17 @@ class Player:
         return False
         
     def set_location(self, location):
-        """Устанавливает текущую локацию игрока"""
-        self.current_location = location
+        """Устанавливает текущую локацию игрока
+        
+        Args:
+            location: Объект локации или строковый ID локации
+        """
+        # Если передан объект Location, сохраняем его ID
+        if hasattr(location, 'id'):
+            self.current_location = location.id
+        else:
+            # Если передана строка ID или что-то другое, сохраняем как есть
+            self.current_location = location
         
     def move_to(self, game, location_id):
         """Перемещает игрока в указанную локацию"""
@@ -68,19 +108,25 @@ class Player:
         if not location:
             print(f"Локация {location_id} не существует!")
             return False
+            
+        # Проверяем, можно ли попасть в эту локацию из текущей
+        current_loc = self.current_location
+        if current_loc:
+            current_location = game.get_location(current_loc)
+            if current_location and location_id not in current_location.connected_locations:
+                print(f"Невозможно попасть в локацию {location.name} из текущей локации!")
+                return False
         
-        # Проверяем, что локация доступна из текущей
-        if self.current_location and location_id not in self.current_location.connected_locations:
-            print(f"Невозможно попасть в локацию {location.name} из текущего места!")
-            return False
+        # Устанавливаем новую локацию (используем ID)
+        self.current_location = location_id
         
-        # Перемещаемся в новую локацию
-        self.current_location = location
+        # Отмечаем локацию как посещенную
+        game.mark_location_as_visited(location_id)
         
-        # Обновляем пути к отслеживаемой цели и целям квеста
+        # Обновляем пути для отслеживаемых целей
         if hasattr(game, 'update_tracked_path'):
             game.update_tracked_path()
-        
+            
         # Обновляем прогресс всех активных квестов
         game.update_quest_progress()
         
@@ -95,7 +141,12 @@ class Player:
             return False
         
         # Проверяем наличие ресурса в локации
-        if resource_id not in self.current_location.resources or self.current_location.resources[resource_id] <= 0:
+        current_location = game.get_location(self.current_location)
+        if not current_location:
+            print("Ошибка: текущая локация не найдена!")
+            return False
+            
+        if resource_id not in current_location.resources or current_location.resources[resource_id] <= 0:
             print(f"Ресурс {resource_id} отсутствует в текущей локации!")
             return False
         
@@ -121,20 +172,20 @@ class Player:
                 return False
         
         # Собираем ресурс
-        collected = self.current_location.collect_resource(resource_id, count)
+        collected = current_location.collect_resource(resource_id, count)
         if collected > 0:
             # Добавляем ресурс в инвентарь
             if not self.add_item_by_id(game, resource_id, collected):
                 print(f"ОШИБКА: Не удалось добавить ресурс {resource_id} в инвентарь!")
                 # Возвращаем ресурс обратно в локацию
-                self.current_location.resources[resource_id] += collected
+                current_location.resources[resource_id] += collected
                 return False
             
             # Здесь item_data точно не None, так как мы проверили это выше
             print(f"Вы собрали {collected} единиц ресурса {item_data.get('name', resource_id)}")
             
             # Добавляем ресурс в глоссарий
-            game.add_resource_to_glossary(resource_id, self.current_location.id)
+            game.add_resource_to_glossary(resource_id, self.current_location)
             
             # Прокачиваем соответствующие навыки
             if item_data:
@@ -167,17 +218,54 @@ class Player:
         
         return False
 
-    def look_around(self):
+    def look_around(self, game):
         """Осматривает текущую локацию"""
         if not self.current_location:
             print("Вы не находитесь ни в одной локации!")
             return
         
-        print(self.current_location.describe())
+        current_location = game.get_location(self.current_location)
+        if current_location:
+            print(current_location.describe())
+        else:
+            print(f"Ошибка: локация с ID {self.current_location} не найдена")
 
     def get_skills(self):
         """Возвращает все навыки игрока"""
         return self.skill_system.get_all_skills()
+        
+    def get_skill_bonus(self, bonus_name):
+        """Возвращает суммарное значение бонуса по всем навыкам
+        
+        Args:
+            bonus_name (str): Название бонуса
+            
+        Returns:
+            float: Суммарное значение бонуса
+        """
+        total_bonus = 0
+        for skill in self.get_skills():
+            total_bonus += skill.get_bonus_value(bonus_name)
+        return total_bonus
+        
+    def get_all_skill_bonuses(self):
+        """Возвращает словарь со всеми активными бонусами от навыков
+        
+        Returns:
+            dict: Словарь {bonus_name: total_value}
+        """
+        all_bonuses = {}
+        
+        # Собираем все бонусы от навыков
+        for skill in self.get_skills():
+            skill_bonuses = skill.get_all_bonuses()
+            for bonus_name, value in skill_bonuses.items():
+                if bonus_name in all_bonuses:
+                    all_bonuses[bonus_name] += value
+                else:
+                    all_bonuses[bonus_name] = value
+                    
+        return all_bonuses
         
     def can_collect_resource(self, resource_id, item_data):
         """Проверяет, имеет ли игрок необходимый уровень навыка для сбора ресурса"""
@@ -258,27 +346,291 @@ class Player:
 
     def add_money(self, amount):
         """Добавляет деньги игроку"""
-        if amount <= 0:
-            return False
-            
-        self.money += amount
-        return True
+        if amount > 0:
+            self.money += amount
+            return True
+        return False
         
     def spend_money(self, amount):
-        """Тратит деньги игрока
+        """Тратит деньги игрока, если их достаточно"""
+        if amount > 0 and self.money >= amount:
+            self.money -= amount
+            return True
+        return False
+    
+    # Методы для управления экипировкой
+    def equip_item(self, item):
+        """Надевает предмет на персонажа
         
         Args:
-            amount: Сумма для списания
+            item: Объект надеваемого предмета
+        
+        Returns:
+            bool: True если предмет был надет, False если нет
+            str: Сообщение об успехе или ошибке
+        """
+        # Проверяем, что предмет существует
+        if not item:
+            return False, "Предмет не найден"
+        
+        # Проверяем, что предмет можно экипировать
+        if not hasattr(item, 'get_slot'):
+            return False, "Этот предмет нельзя экипировать"
+        
+        slot = item.get_slot()
+        
+        # Проверяем, есть ли такой слот
+        if slot not in self.equipment:
+            return False, f"Слот {slot} не существует"
+        
+        # Если слот уже занят, возвращаем старый предмет в инвентарь
+        if self.equipment[slot]:
+            old_item = self.equipment[slot]
+            self.inventory.add_item(old_item)
+            self.logger.info(f"Снят предмет {old_item.name} из слота {slot}")
+        
+        # Удаляем предмет из инвентаря
+        self.inventory.remove_item(item)
+        
+        # Надеваем новый предмет
+        self.equipment[slot] = item
+        self.logger.info(f"Экипирован предмет {item.name} в слот {slot}")
+        
+        # Обновляем бонусы от экипировки
+        self._update_equipment_bonuses()
+        
+        return True, f"Предмет {item.name} успешно экипирован"
+    
+    def unequip_item(self, slot):
+        """Снимает предмет из указанного слота
+        
+        Args:
+            slot: Слот, из которого нужно снять предмет
+        
+        Returns:
+            bool: True если предмет был снят, False если нет
+            str: Сообщение об успехе или ошибке
+        """
+        # Проверяем, есть ли такой слот
+        if slot not in self.equipment:
+            return False, f"Слот {slot} не существует"
+        
+        # Проверяем, есть ли предмет в слоте
+        if not self.equipment[slot]:
+            return False, f"Слот {slot} пуст"
+        
+        # Возвращаем предмет в инвентарь
+        item = self.equipment[slot]
+        self.inventory.add_item(item)
+        
+        # Очищаем слот
+        self.equipment[slot] = None
+        self.logger.info(f"Снят предмет {item.name} из слота {slot}")
+        
+        # Обновляем бонусы от экипировки
+        self._update_equipment_bonuses()
+        
+        return True, f"Предмет {item.name} снят и возвращен в инвентарь"
+    
+    def _update_equipment_bonuses(self):
+        """Обновляет бонусы от экипировки"""
+        # Сбрасываем бонусы
+        self.equipment_bonuses = {
+            "defense": 0,
+            "attack": 0,
+            "magic": 0,
+            "dodge": 0,
+            "crit_chance": 0,
+            "crit_damage": 0
+        }
+        
+        # Суммируем бонусы от всех предметов
+        for slot, item in self.equipment.items():
+            if not item:
+                continue
+                
+            # Для брони считаем защиту
+            if hasattr(item, 'get_defense'):
+                self.equipment_bonuses["defense"] += item.get_defense()
+            
+            # Проверяем другие бонусы от предмета
+            if hasattr(item, 'get_bonuses'):
+                bonuses = item.get_bonuses()
+                for bonus_type, value in bonuses.items():
+                    if bonus_type in self.equipment_bonuses:
+                        self.equipment_bonuses[bonus_type] += value
+            
+            # Тут можно добавить другие характеристики по мере добавления других типов предметов
+        
+        self.logger.debug(f"Обновлены бонусы от экипировки: {self.equipment_bonuses}")
+    
+    def get_equipped_items(self):
+        """Возвращает словарь с экипированными предметами"""
+        return self.equipment
+    
+    def get_equipment_bonuses(self):
+        """Возвращает бонусы от экипировки"""
+        return self.equipment_bonuses
+    
+    def take_damage(self, damage):
+        """Игрок получает урон с учетом защиты от брони
+        
+        Args:
+            damage: Количество урона
             
         Returns:
-            bool: True если игрок может позволить себе эту трату, False иначе
+            bool: True, если игрок умер после получения урона
+            bool: Было ли уклонение
         """
-        if amount <= 0:
-            return True
+        # Проверяем шанс уклонения
+        import random
+        total_dodge = self.dodge_chance + self.equipment_bonuses.get("dodge", 0)
+        is_dodged = random.randint(1, 100) <= total_dodge
+        
+        if is_dodged:
+            self.logger.debug(f"Игрок {self.name} уклонился от атаки")
+            return False, True
+        
+        # Учитываем защиту от брони
+        actual_damage = max(1, damage - self.equipment_bonuses.get("defense", 0))
+        self.health = max(0, self.health - actual_damage)
+        self.logger.debug(f"Игрок {self.name} получил {actual_damage} урона (исходный урон {damage}), осталось {self.health} HP")
+        return self.health <= 0, False
+    
+    def is_alive(self):
+        """Проверяет, жив ли игрок"""
+        return self.health > 0
+    
+    def calculate_damage(self):
+        """Рассчитывает базовый урон атаки игрока с учетом экипировки и навыков
+        
+        Returns:
+            int: Количество урона
+            bool: Критический удар или нет
+        """
+        # Базовый урон от уровня игрока
+        base_damage = 5 + (self.level - 1) * 2
+        
+        # Добавляем бонус от экипировки
+        equipment_bonus = self.equipment_bonuses.get("attack", 0)
+        
+        # Добавляем бонусы от навыков
+        skill_bonuses = self.get_all_skill_bonuses()
+        skill_attack_bonus = skill_bonuses.get("attack", 0)
+        
+        # Учитываем специальные бонусы для разных типов оружия
+        weapon_type_bonus = 0
+        # Если есть оружие, определяем его тип
+        weapon = self.equipment.get("weapon")
+        if weapon:
+            weapon_type = weapon.get_type()
+            weapon_type_bonus = skill_bonuses.get(f"{weapon_type}_damage", 0)
+        
+        total_damage = base_damage + equipment_bonus + skill_attack_bonus + weapon_type_bonus
+        
+        # Проверяем, будет ли критический удар
+        import random
+        base_crit_chance = self.crit_chance + self.equipment_bonuses.get("crit_chance", 0)
+        skill_crit_bonus = skill_bonuses.get("critical_chance", 0)
+        total_crit_chance = base_crit_chance + skill_crit_bonus
+        
+        is_critical = random.randint(1, 100) <= total_crit_chance
+        
+        # Если критический удар, увеличиваем урон
+        if is_critical:
+            base_crit_multiplier = self.crit_damage + self.equipment_bonuses.get("crit_damage", 0)
+            skill_crit_damage_bonus = skill_bonuses.get("critical_damage", 0)
+            total_crit_multiplier = base_crit_multiplier + skill_crit_damage_bonus
             
-        if self.money < amount:
-            return False
+            total_damage = total_damage * total_crit_multiplier
+        
+        # Добавляем рандомизацию +/- 20%
+        variation = random.uniform(0.8, 1.2)
+        
+        return max(1, int(total_damage * variation)), is_critical
+    
+    def attack(self, target):
+        """Игрок атакует цель
+        
+        Args:
+            target: Цель атаки (обычно монстр)
             
-        self.money -= amount
-        return True
+        Returns:
+            int: Количество нанесенного урона
+            bool: Критический удар или нет
+            bool: Было ли уклонение
+        """
+        # Проверяем, уклонилась ли цель
+        import random
+        dodge_chance = 5  # Базовый шанс уклонения для монстров
+        if hasattr(target, 'dodge_chance'):
+            dodge_chance = target.dodge_chance
+            
+        is_dodged = random.randint(1, 100) <= dodge_chance
+        
+        if is_dodged:
+            self.logger.debug(f"Монстр {target.name} уклонился от атаки игрока {self.name}")
+            return 0, False, True
+        
+        # Расчет урона
+        damage, is_critical = self.calculate_damage()
+        target.take_damage(damage)
+        
+        if is_critical:
+            self.logger.debug(f"Игрок {self.name} нанес КРИТИЧЕСКИЙ удар {target.name} на {damage} урона")
+        else:
+            self.logger.debug(f"Игрок {self.name} атаковал {target.name} на {damage} урона")
+            
+        return damage, is_critical, False
+    
+    def heal(self, amount):
+        """Восстанавливает здоровье игрока
+        
+        Args:
+            amount: Количество восстанавливаемого здоровья
+        """
+        self.health = min(self.max_health, self.health + amount)
+        self.logger.debug(f"Игрок {self.name} восстановил {amount} HP, теперь {self.health} HP")
+        
+    def show_skills_info(self):
+        """Отображает информацию о всех навыках игрока"""
+        skills = self.get_skills()
+        
+        if not skills:
+            print("У вас пока нет никаких навыков.")
+            return
+            
+        print(f"\n=== НАВЫКИ ({len(skills)}) ===")
+        
+        # Сортируем навыки по уровню (от высокого к низкому)
+        sorted_skills = sorted(skills, key=lambda x: x.level, reverse=True)
+        
+        for skill in sorted_skills:
+            print("\n" + skill.get_description_text())
+            
+    def show_skill_info(self, skill_id):
+        """Отображает подробную информацию о конкретном навыке"""
+        skill = self.skill_system.get_skill(skill_id)
+        
+        if not skill:
+            print(f"Навык '{skill_id}' не найден.")
+            return
+            
+        print("\n" + skill.get_description_text())
+            
+    def get_skill_info(self, skill_id):
+        """Возвращает словарь с информацией о навыке
+        
+        Args:
+            skill_id (str): Идентификатор навыка
+            
+        Returns:
+            dict or None: Словарь с информацией о навыке или None, если навык не найден
+        """
+        skill = self.skill_system.get_skill(skill_id)
+        
+        if not skill:
+            return None
+            
+        return skill.get_detail_info()
         

@@ -4,6 +4,7 @@ import readchar
 from colorama import init, Fore, Back, Style
 import msvcrt
 import logging
+import json
 
 from src.models.quests.Quest import Quest
 from src.models.npc.QuestNPC import QuestNPC  # Добавляем библиотеку для Windows
@@ -13,6 +14,8 @@ from src.ui.screens.npc import talk_to_npc
 from src.ui.screens.quests import show_quests
 from src.ui.screens.skills import show_skills
 from src.ui.screens.glossary import show_glossary
+from src.ui.screens.equipment import show_equipment
+from src.ui.screens.combat import start_combat
 # Инициализация colorama для работы с цветами в консоли
 init()
 
@@ -52,7 +55,8 @@ ICONS = {
     'mining': '⚒️',       # горное дело
     'herbalism': '🌱',    # травничество
     'elementalism': '🔮', # элементализм
-    'alchemy': '⚗️',      # алхимия
+    'monster': '👹',      # монстр
+    'combat': '⚔️',       # бой
     'back': '↩️',         # назад
     'player': '👤',       # игрок
     'common': '⚪',       # обычный предмет
@@ -70,16 +74,23 @@ ICONS = {
     'item': '📦',          # предмет
     'skill': '🔧',         # навык
     'book': '📖',          # книга/глоссарий
+    'compass': '🧭',       # компас
 }
 
 class GameMenu:
-    def __init__(self, game):
-        self.game = game
-        self.player = game.player
-        self.running = True
+    def __init__(self, game=None):
+        """Инициализация меню игры"""
+        self.game = game if game else None
+        self.player = game.player if game else None
+        self.running = True  # Для обратной совместимости с существующим кодом
         self.debug_mode = False  # Временно включаем режим отладки
         
-        # Цвета и стили для меню
+        # Флаги состояния игры
+        self.is_running = False  # Флаг активности игрового цикла
+        self.is_in_main_menu = True  # Флаг нахождения в главном меню
+        self.should_exit = False  # Флаг выхода из игры
+        
+        # Настройки цветов для меню
         self.title_color = Fore.CYAN
         self.selected_color = Fore.BLACK + Back.LIGHTBLACK_EX  # Меняем CYAN на LIGHTBLACK_EX для серого фона
         self.normal_color = Fore.WHITE
@@ -89,6 +100,7 @@ class GameMenu:
         self.error_color = Fore.RED
         self.action_color = Fore.MAGENTA
         self.info_color = Fore.WHITE + Style.BRIGHT
+        self.warning_color = Fore.YELLOW  # Добавляем цвет для предупреждений
         
         # Настройка логирования
         self.logger = logging.getLogger(__name__)
@@ -182,6 +194,8 @@ class GameMenu:
                     return 'ESC'
                 elif key == b' ':
                     return 'SPACE'
+                elif key == b'\x08':
+                    return 'BACKSPACE'
                 
                 # Для обычных клавиш пробуем декодировать
                 try:
@@ -205,6 +219,8 @@ class GameMenu:
                     return 'ENTER'
                 elif key == '\x1b':
                     return 'ESC'
+                elif key == '\x7f' or key == '\b':
+                    return 'BACKSPACE'
                 
                 return key
                 
@@ -255,8 +271,6 @@ class GameMenu:
                             print(f"{self.selected_color}{description[4]}{Style.RESET_ALL}")
                         else:
                             print()
-                    else:
-                        print()
                 else:
                     # Для невыбранных пунктов просто выводим текст
                     print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}   {display_text:<30}", end="")
@@ -269,8 +283,6 @@ class GameMenu:
                             print(f"{self.info_color}{description[4]}{Style.RESET_ALL}")
                         else:
                             print()
-                    else:
-                        print()
             
             print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
             
@@ -328,14 +340,406 @@ class GameMenu:
             return f"{rarity_color}{item_data['name']}{Style.RESET_ALL} ({count})"
         return f"{resource_id} ({count})"
     
+    def main_menu(self):
+        """Главное меню игры"""
+        while True:
+            self.clear_screen()
+            options = [
+                "Начать игру",
+                "Загрузить игру",
+                "Настройки",
+                "Выход"
+            ]
+            
+            # Отображаем главное меню с логотипом
+            self.draw_box(80, "ЭЛЬДАРИЯ: ХРОНИКИ ПРОБУЖДЕНИЯ")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {self.info_color}Добро пожаловать в мир Эльдарии!{Style.RESET_ALL}")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+            self.draw_separator(80)
+            
+            selected = 0
+            while True:
+                self.clear_screen()
+                self.draw_box(80, "ЭЛЬДАРИЯ: ХРОНИКИ ПРОБУЖДЕНИЯ")
+                print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+                
+                # Выводим названия пунктов меню
+                for i, option in enumerate(options):
+                    if i == selected:
+                        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {self.selected_color}[{i+1}] {option}{Style.RESET_ALL}")
+                    else:
+                        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} [{i+1}] {option}")
+                
+                print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+                self.draw_bottom_box(80)
+                
+                key = self.get_key()
+                if key in KEY_UP:
+                    selected = (selected - 1) % len(options)
+                elif key in KEY_DOWN:
+                    selected = (selected + 1) % len(options)
+                elif key in KEY_ENTER:
+                    if selected == 0:
+                        # Начать новую игру
+                        self.new_game()
+                        return
+                    elif selected == 1:
+                        # Загрузить игру
+                        if self.load_game_screen():
+                            return
+                    elif selected == 2:
+                        # Настройки
+                        self.settings_menu()
+                    elif selected == 3:
+                        # Выход
+                        if self.confirm_exit():
+                            return
+                # Поддержка выбора пунктов цифрами
+                elif key in ['1', '2', '3', '4']:
+                    num = int(key) - 1
+                    if num == 0:
+                        self.new_game()
+                        return
+                    elif num == 1:
+                        if self.load_game_screen():
+                            return
+                    elif num == 2:
+                        self.settings_menu()
+                    elif num == 3:
+                        if self.confirm_exit():
+                            return
+                elif key in KEY_ESC:
+                    if self.confirm_exit():
+                        return
+    
+    def new_game(self):
+        """Создает новую игру и запускает ее"""
+        player_name = self.input_player_name()
+        if not player_name:
+            return False
+        
+        # Создаем нового игрока и запускаем игру
+        self.game.player.name = player_name
+        # Устанавливаем флаг новой игры
+        self.game.is_new_game = True
+        self.start_game()
+        return True
+    
+    def input_player_name(self):
+        """Запрашивает имя игрока"""
+        self.clear_screen()
+        self.draw_box(80, "СОЗДАНИЕ ПЕРСОНАЖА")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} Введите имя вашего персонажа:")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+        self.draw_bottom_box(80)
+        
+        name = ""
+        while True:
+            self.clear_screen()
+            self.draw_box(80, "СОЗДАНИЕ ПЕРСОНАЖА")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} Введите имя вашего персонажа:")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {name}")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} Нажмите Enter для подтверждения, Esc для отмены")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+            self.draw_bottom_box(80)
+            
+            key = self.get_key()
+            
+            # Обработка ввода
+            if key == 'ENTER' and name.strip():
+                return name.strip()
+            elif key == 'ESC':
+                return None
+            elif key == 'BACKSPACE':
+                name = name[:-1]
+            # Обработка русских и английских букв, цифр и знаков подчеркивания
+            elif len(key) == 1 and (key.isalnum() or key == '_' or key == ' '):
+                # Ограничиваем длину имени персонажа
+                if len(name) < 30:
+                    name += key
+        
+        return None
+    
+    def load_game_screen(self):
+        """Отображает экран загрузки сохранений"""
+        # Получаем список сохранений
+        saves = self.game.get_saves_list()
+        
+        if not saves:
+            self.show_message("Сохранения не найдены!", self.error_color)
+            return False
+        
+        # Создаем список опций для меню
+        options = []
+        for save in saves:
+            playername = save.get("playername", "Неизвестно")
+            player_level = save.get("player_level", 1)
+            location = save.get("current_location", "Неизвестно")
+            save_time = save.get("save_time", "")
+            
+            # Создаем строку с информацией о сохранении
+            save_info = f"{playername} (Ур. {player_level}) - {location}"
+            save_description = f"Сохранено: {save_time}"
+            
+            options.append((save["save_path"], save_info, save_description))
+        
+        # Добавляем опцию возврата в главное меню
+        options.append(("back", "← Назад в главное меню", ""))
+        
+        # Показываем меню выбора сохранения
+        selected = self.show_save_menu("ЗАГРУЗКА ИГРЫ", options)
+        
+        # Если пользователь выбрал выход или нажал ESC
+        if selected == "back" or selected is None:
+            return False
+        
+        # Загружаем выбранное сохранение
+        loaded_game = self.game.load_game(selected)
+        
+        if loaded_game:
+            # Заменяем текущую игру загруженной
+            self.game = loaded_game
+            self.player = loaded_game.player
+            
+            # Обязательно устанавливаем флаг, что игра загружена
+            self.game.is_new_game = False
+            
+            # Повторно выполняем preload для синхронизации NPC и загрузки квестов
+            self.game.preload()
+            
+            # Показываем сообщение об успешной загрузке
+            self.show_message(f"Игра успешно загружена!", self.highlight_color)
+            
+            # Запускаем игровой процесс
+            self.start_game()
+            return True
+        else:
+            # Показываем сообщение об ошибке
+            self.show_message("Не удалось загрузить сохранение!", self.error_color)
+            return False
+    
+    def show_save_menu(self, title, options):
+        """Отображает меню с сохранениями в виде таблицы"""
+        current_option = 0
+        
+        while True:
+            self.clear_screen()
+            self.draw_box(80, title)
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+            
+            # Заголовок таблицы
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {'ПЕРСОНАЖ':<25} {'УРОВЕНЬ':<10} {'ЛОКАЦИЯ':<20} {'ДАТА':<15}")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {'-'*75}")
+            
+            for i, option in enumerate(options):
+                # Извлекаем данные о сохранении
+                save_path, display_text, description = option
+                
+                # Для опции "Назад" отображаем только текст
+                if save_path == "back":
+                    if i == current_option:
+                        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {self.selected_color}{display_text}{Style.RESET_ALL}")
+                    else:
+                        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {display_text}")
+                    continue
+                
+                # Для сохранений разбиваем информацию на компоненты
+                if save_path != "back":
+                    # Получаем метаданные сохранения
+                    meta_file = os.path.join(save_path, "save_info.json")
+                    try:
+                        with open(meta_file, 'r', encoding='utf-8') as f:
+                            meta_data = json.load(f)
+                            
+                        playername = meta_data.get("playername", "Неизвестно")
+                        player_level = meta_data.get("player_level", 1)
+                        location = meta_data.get("current_location", "Неизвестно")
+                        save_time = meta_data.get("save_time", "")
+                        
+                        # Формируем строки таблицы
+                        if i == current_option:
+                            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {self.selected_color}{playername:<25} {player_level:<10} {location:<20} {save_time:<15}{Style.RESET_ALL}")
+                        else:
+                            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {playername:<25} {player_level:<10} {location:<20} {save_time:<15}")
+                    except Exception as e:
+                        # В случае ошибки отображаем исходный текст
+                        if i == current_option:
+                            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {self.selected_color}{display_text} (Ошибка загрузки){Style.RESET_ALL}")
+                        else:
+                            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {display_text} (Ошибка загрузки)")
+            
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+            self.draw_bottom_box(80)
+            print(f"{Fore.CYAN}[↑/↓] Выбор [Enter] Загрузить [Esc] Назад{Style.RESET_ALL}")
+            
+            key = self.get_key()
+            
+            if key in KEY_UP:
+                current_option -= 1
+                # Если вышли за верхнюю границу, переходим в конец списка
+                if current_option < 0:
+                    current_option = len(options) - 1
+            elif key in KEY_DOWN:
+                current_option += 1
+                # Если вышли за нижнюю границу, переходим в начало списка
+                if current_option >= len(options):
+                    current_option = 0
+            elif key in KEY_ENTER:
+                # Возвращаем выбранную опцию
+                return options[current_option][0]  # Возвращаем save_path
+            elif key in KEY_ESC:
+                return None
+    
+    def save_current_game(self):
+        """Сохраняет текущую игру"""
+        # Если имя игрока не задано, запрашиваем его
+        if not self.player.name or self.player.name == "Unknown":
+            new_name = self.input_player_name()
+            if new_name:
+                self.player.name = new_name
+            else:
+                return False
+        
+        # Опционально спрашиваем, хочет ли пользователь сохранить игру под другим именем
+        self.clear_screen()
+        self.draw_box(80, "СОХРАНЕНИЕ ИГРЫ")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} Текущее имя персонажа: {self.player.name}")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} Хотите сохранить игру под другим именем? (Y/N)")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+        self.draw_bottom_box(80)
+        
+        key = self.get_key()
+        save_name = self.player.name
+        
+        if key.lower() == 'y':
+            # Запрашиваем новое имя для сохранения
+            new_save_name = self.input_save_name(default_name=self.player.name)
+            if new_save_name:
+                save_name = new_save_name
+        
+        # Сохраняем игру
+        if self.game.save_game(save_name):
+            self.show_message(f"Игра успешно сохранена под именем '{save_name}'!", self.highlight_color)
+            return True
+        else:
+            self.show_message("Не удалось сохранить игру!", self.error_color)
+            return False
+            
+    def input_save_name(self, default_name=""):
+        """Запрашивает имя для сохранения"""
+        self.clear_screen()
+        self.draw_box(80, "СОХРАНЕНИЕ ИГРЫ")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} Введите имя для сохранения:")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+        self.draw_bottom_box(80)
+        
+        name = default_name
+        while True:
+            self.clear_screen()
+            self.draw_box(80, "СОХРАНЕНИЕ ИГРЫ")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} Введите имя для сохранения:")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {name}")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} Нажмите Enter для подтверждения, Esc для отмены")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+            self.draw_bottom_box(80)
+            
+            key = self.get_key()
+            
+            # Обработка ввода
+            if key == 'ENTER' and name.strip():
+                return name.strip()
+            elif key == 'ESC':
+                return None
+            elif key == 'BACKSPACE':
+                name = name[:-1]
+            # Обработка русских и английских букв, цифр и знаков подчеркивания
+            elif len(key) == 1 and (key.isalnum() or key == '_' or key == ' '):
+                # Ограничиваем длину имени сохранения
+                if len(name) < 30:
+                    name += key
+        
+        return None
+    
+    def settings_menu(self):
+        """Отображает меню настроек"""
+        options = [
+            "Сложность",
+            "Звуки",
+            "Назад"
+        ]
+        
+        selected = self.show_menu("НАСТРОЙКИ", options)
+        
+        if selected == "Сложность":
+            self.show_message("Настройки сложности недоступны в данной версии", self.info_color)
+        elif selected == "Звуки":
+            self.show_message("Настройки звука недоступны в данной версии", self.info_color)
+    
+    def confirm_exit(self, message="Вы уверены, что хотите выйти из игры?"):
+        """Подтверждение выхода с пользовательским сообщением"""
+        self.clear_screen()
+        self.draw_box(80, "ПОДТВЕРЖДЕНИЕ")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {message}")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} [Y] Да     [N] Нет")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+        self.draw_bottom_box(80)
+        
+        key = self.get_key()
+        return key.lower() in ['y']
+        
+    def auto_save_warning(self):
+        """Предупреждение и автосохранение перед выходом"""
+        self.clear_screen()
+        self.draw_box(80, "АВТОСОХРАНЕНИЕ")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {self.warning_color}Внимание! Несохраненный прогресс может быть потерян.{Style.RESET_ALL}")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} Выполняется автосохранение...")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+        self.draw_bottom_box(80)
+        
+        # Выполнить автосохранение
+        success = self.game.auto_save_game()
+        
+        if success:
+            print(f"\n{self.normal_color}Автосохранение успешно выполнено!{Style.RESET_ALL}")
+        else:
+            print(f"\n{self.warning_color}Не удалось выполнить автосохранение!{Style.RESET_ALL}")
+            
+        time.sleep(1)  # Небольшая пауза, чтобы пользователь увидел сообщение
+    
     def start_game(self):
         """Запускает игровой процесс"""
-        # Сюда добавим код для начала игры
+        # Для новой игры выводим информацию о начале приключения
+        if self.game.is_new_game:
+            self.clear_screen()
+            self.draw_box(80, "НАЧАЛО ПРИКЛЮЧЕНИЯ")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} Добро пожаловать в мир Эльдарии, {self.player.name}!")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} Ваше приключение начинается...")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+            self.draw_bottom_box(80)
+            print("\nНажмите любую клавишу, чтобы продолжить...")
+            self.get_key()
+            
+        # Запускаем игровой цикл
         self.game_loop()
     
     def game_loop(self):
         """Основной игровой цикл"""
-        while self.running:
+        self.is_running = True
+        
+        while self.is_running:
             # Обновляем состояние игры
             self.game.update()
             
@@ -346,8 +750,20 @@ class GameMenu:
             self.look_around()
             
             # Проверяем условия выхода из цикла
-            if not self.running:
+            if not self.is_running:
+                # Сохраняем игру при выходе
+                self.game.auto_save_game()
                 break
+        
+        # Проверяем, куда нужно вернуться
+        if self.is_in_main_menu:
+            # Возвращаемся в главное меню
+            self.main_menu()
+        elif self.should_exit:
+            # Выходим из игры
+            print(f"{self.normal_color}Спасибо за игру! До свидания!{Style.RESET_ALL}")
+            time.sleep(1.5)
+            return
     
     def look_around(self):
         """Показывает информацию о текущей локации и доступных действиях"""
@@ -355,7 +771,13 @@ class GameMenu:
         display_options = []
         display_options_disabled = []
 
-        location = self.player.current_location
+        # Получаем объект локации по ID
+        location_id = self.player.current_location
+        location = self.game.get_location(location_id)
+        
+        if not location:
+            print(f"Ошибка: локация с ID {location_id} не найдена")
+            return
 
         # Выводим информацию о локации
         self.clear_screen()
@@ -460,6 +882,36 @@ class GameMenu:
                     
                     display_options_disabled.append(f"{Fore.LIGHTBLACK_EX}{ICONS['collect']} Добыть: {format_resource_name(self, res_id)} ({count}){Style.RESET_ALL} {missing_skills_info}")
         
+        # Добавляем NPC в локации
+        npcs = self.game.get_npcs_at_location(location.id)
+        # NPC будут отображены позже в разделе "С кем можно поговорить"
+        
+        # Добавляем возможность поговорить с NPC
+        for npc in npcs:
+            options.append(("talk", npc.id))
+            npc_icon = ICONS['npc_trader'] if npc.type == 'trader' else ICONS['npc_quest'] if npc.type == 'quest' else ICONS['npc_dialogue']
+            display_options.append(f"{ICONS['npc_dialogue']} Поговорить с: {self.normal_color}{npc.name} {npc_icon}{Style.RESET_ALL}")
+        
+        # Добавляем монстров в локации, если они есть
+        monsters_in_location = location.monsters
+        if monsters_in_location:
+            print(f"\n{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {self.highlight_color}Существа в локации:{Style.RESET_ALL}")
+            for monster_id, count in monsters_in_location.items():
+                if count > 0:
+                    # Получаем информацию о монстре
+                    monster = self.game.get_monster(monster_id) if hasattr(self.game, 'get_monster') else None
+                    monster_name = monster.name if monster else monster_id
+                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}   {ICONS['monster']} {monster_name} ({count})")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+            
+            # Добавляем опцию боя для каждого типа монстров
+            for monster_id, count in monsters_in_location.items():
+                if count > 0:
+                    monster = self.game.get_monster(monster_id) if hasattr(self.game, 'get_monster') else None
+                    monster_name = monster.name if monster else monster_id
+                    options.append(("combat", monster_id))
+                    display_options.append(f"{ICONS['combat']} Бой: {Fore.RED}{monster_name}{Style.RESET_ALL} ({count})")
+                    
         # Добавляем доступ к навыкам
         options.append(("skills", None))
         display_options.append(f"{ICONS['skills']} Навыки (N)")
@@ -476,20 +928,27 @@ class GameMenu:
         options.append(("glossary", None))
         display_options.append(f"{ICONS['book']} Глоссарий (G)")
         
-        # Добавляем NPC в локации
-        npcs = self.game.get_npcs_at_location(location.id)
-        if npcs:
-            print(f"\n{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {self.highlight_color}Персонажи в локации:{Style.RESET_ALL}")
-            for npc in npcs:
-                npc_icon = ICONS['npc_trader'] if npc.type == 'trader' else ICONS['npc_quest'] if npc.type == 'quest' else ICONS['npc_dialogue']
-                print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}   {npc_icon} {npc.name} - {npc.description}")
+        # Выводим связанные локации
+        if location.connected_locations:
+            for i, (loc_id, loc_name) in enumerate(connected_locations):
+                # Проверяем, находится ли локация на пути к цели
+                if loc_id == next_location_on_path:
+                    # Выделяем локацию более заметно с иконкой компаса
+                    compass_icon = "🧭"  # Иконка компаса для навигации
+                    
+                    # Разное оформление для цели квеста и отслеживаемой цели
+                    if is_quest_target:
+                        target_info = f"{Fore.LIGHTGREEN_EX}[➜ цель квеста]{Style.RESET_ALL}"
+                    else:
+                        target_info = f"{Fore.LIGHTGREEN_EX}[➜ отслеживаемая цель: {tracked_info['name']}]{Style.RESET_ALL}"
+                        
+                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}   {i+1}. {ICONS['travel']} {compass_icon} {self.location_color}{loc_name}{Style.RESET_ALL} {target_info}")
+                else:
+                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}   {i+1}. {ICONS['travel']} {self.location_color}{loc_name}{Style.RESET_ALL}")
             print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
-        
-        # Добавляем возможность поговорить с NPC
-        for npc in npcs:
-            options.append(("talk", npc.id))
-            npc_icon = ICONS['npc_trader'] if npc.type == 'trader' else ICONS['npc_quest'] if npc.type == 'quest' else ICONS['npc_dialogue']
-            display_options.append(f"{ICONS['npc_dialogue']} Поговорить с: {self.normal_color}{npc.name} {npc_icon}{Style.RESET_ALL}")
+            
+            # Рисуем разделитель перед списком действий
+            self.draw_separator(80)
         
         current_option = 0
         
@@ -541,6 +1000,7 @@ class GameMenu:
                         icon = ICONS['npc']
                     elif target_type == "resource":
                         icon = ICONS['resource']
+                        
                     
                     print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {Fore.LIGHTGREEN_EX}Цель квеста:{Style.RESET_ALL} {icon} {Fore.LIGHTYELLOW_EX}{target_name}{Style.RESET_ALL} в {Fore.LIGHTYELLOW_EX}{location_name}{Style.RESET_ALL}")
                     
@@ -611,14 +1071,23 @@ class GameMenu:
                 
                 if has_resources:
                     print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
-            
-            # Выводим связанные локации
+                    
+            # Рисуем разделитель перед списком действий
             if location.connected_locations:
                 print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {self.highlight_color}{ICONS['location']} Отсюда можно пойти в:{Style.RESET_ALL}")
                 for loc_id in location.connected_locations:
                     target_location = self.game.get_location(loc_id)
                     if target_location:
                         print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}   {self.location_color}{target_location.name}{Style.RESET_ALL}")
+                print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+            
+            # Выводим NPC, с которыми можно поговорить
+            npcs = self.game.get_npcs_at_location(location.id)
+            if npcs:
+                print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {self.highlight_color}{ICONS['npc']} С кем можно поговорить:{Style.RESET_ALL}")
+                for npc in npcs:
+                    npc_icon = ICONS['npc_trader'] if npc.type == 'trader' else ICONS['npc_quest'] if npc.type == 'quest' else ICONS['npc_dialogue']
+                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}   {npc_icon} {self.normal_color}{npc.name}{Style.RESET_ALL}")
                 print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
             
             # Рисуем разделитель перед списком действий
@@ -647,6 +1116,12 @@ class GameMenu:
             for option in display_options_disabled:
                 print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}   {option}")
             
+            # Отображаем нижнюю панель
+            self.draw_bottom_box(80)
+            # Вывод подсказок по управлению
+            print(f"{Fore.CYAN}[↑/↓] Выбор [Enter] Действие [1-9] Перемещение [I] Инвентарь [E] Экипировка [Q] Квесты [N] Навыки [G] Глоссарий [Esc] Выход{Style.RESET_ALL}")
+            
+            # Используем стандартный footer
             self.print_footer()
             
             # Получаем нажатую клавишу
@@ -724,8 +1199,26 @@ class GameMenu:
                         talk_to_npc(self, npc)
                         return self.look_around()
                 
+                elif action_type == "combat":
+                    # Запускаем бой с монстром
+                    monster_defeated = start_combat(self, action_id)
+                    
+                    # Если монстр побежден, удаляем его из локации
+                    location_id = self.player.current_location
+                    location = self.game.get_location(location_id)
+                    
+                    if monster_defeated and action_id in location.monsters:
+                        location.monsters[action_id] -= 1
+                        
+                        # Обновляем прогресс квестов после победы над монстром
+                        self.game.update_quest_progress()
+                    
+                    return self.look_around()
+                
             elif key == 'ESC': # Удалили 'or key == 'Q'
-                break
+                # Вызываем меню паузы
+                self.pause_menu()
+                return
             # Добавляем горячие клавиши для быстрого доступа
             elif key == 'N' or key == 'n':  # Навыки
                 show_skills(self)
@@ -739,24 +1232,43 @@ class GameMenu:
             elif key == 'G' or key == 'g':  # Глоссарий
                 show_glossary(self)
                 return self.look_around()
+            elif key == 'E' or key == 'e' or key == 'е':  # Экипировка (е - русская e)
+                show_equipment(self)
+                return self.look_around()
+            # Обработка цифровых клавиш для быстрого перемещения в локации
+            elif key in ['1', '2', '3', '4', '5', '6', '7', '8', '9']:
+                # Преобразуем нажатую клавишу в индекс (с учетом, что индексация начинается с 0)
+                location_index = int(key) - 1
+                
+                # Проверяем, существует ли локация с таким индексом
+                if location_index >= 0 and location_index < len(connected_locations):
+                    # Получаем ID локации и перемещаемся туда
+                    location_id = connected_locations[location_index][0]
+                    self.player.move_to(self.game, location_id)
+                    location_id = self.player.current_location
+                    location = self.game.get_location(location_id)
+                    return self.look_around()
         
         # Обновление ресурсов перед выходом
         self.game.update()
     
     def exit_game(self):
-        """Выход из игры"""
+        """Выход из игры с сохранением"""
         self.clear_screen()
         self.draw_box(80, "ВЫХОД ИЗ ИГРЫ")
-        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} Вы уверены, что хотите выйти из игры? (Д/Н)")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} Вы хотите сохранить игру перед выходом? (Y/N)")
         print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
         self.draw_bottom_box(80)
         
         key = self.get_key()
-        if key.lower() in ['д', 'y', 'd']:
-            self.running = False
-            return True
+        if key.lower() == 'y':
+            # Сохраняем игру
+            self.save_current_game()
         
-        return False
+        # В любом случае выходим
+        self.running = False
+        return True
     
     def wrap_text(self, text, max_width=70, indent=0):
         """Разбивает длинный текст на несколько строк для удобного чтения
@@ -829,4 +1341,128 @@ class GameMenu:
         empty_width = width - filled_width
         
         bar = f"{color}{'█' * filled_width}{Style.RESET_ALL}{'░' * empty_width}"
-        return bar 
+        return bar
+
+    def get_rarity_color(self, rarity):
+        """Возвращает цвет для указанной редкости предмета"""
+        rarity_colors = {
+            "COMMON": Fore.WHITE,
+            "UNCOMMON": Fore.GREEN,
+            "RARE": Fore.LIGHTBLUE_EX, 
+            "EPIC": Fore.MAGENTA,
+            "LEGENDARY": Fore.YELLOW,
+            "MYTHIC": Fore.RED
+        }
+        return rarity_colors.get(rarity, Fore.WHITE)
+    
+    def show_message(self, message, color=None, wait_key=True):
+        """Отображает сообщение пользователю
+        
+        Args:
+            message: Текст сообщения
+            color: Цвет сообщения (по умолчанию белый)
+            wait_key: Ожидать нажатия клавиши (по умолчанию True)
+        """
+        if color is None:
+            color = Fore.WHITE
+            
+        self.clear_screen()
+        self.draw_box(80, "Сообщение")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {color}{message}{Style.RESET_ALL}")
+        self.draw_bottom_box(80)
+        
+        if wait_key:
+            print(f"{self.title_color}Нажмите любую клавишу для продолжения...{Style.RESET_ALL}")
+            self.get_key() 
+
+    def pause_menu(self):
+        """Меню паузы во время игры"""
+        options = [
+            "Продолжить",
+            "Сохранить игру",
+            "Настройки",
+            "Выйти в главное меню",
+            "Выйти из игры"
+        ]
+        
+        # Добавляем иконки для каждой опции меню
+        icons = {
+            "Продолжить": "▶️",
+            "Сохранить игру": "💾",
+            "Выйти в главное меню": "🏠",
+            "Выйти из игры": "🚪"
+        }
+        
+        current_option = 0
+        
+        while True:
+            self.clear_screen()
+            
+            # Рисуем заголовок меню
+            self.draw_box(80, "ПАУЗА")
+            
+            # Добавляем небольшое описание выше опций
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {self.highlight_color}Игра приостановлена. Выберите действие:{Style.RESET_ALL}")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+            
+            # Добавляем разделитель
+            self.draw_separator(80)
+            
+            # Выводим опции меню по вертикали
+            for i, option in enumerate(options):
+                icon = icons.get(option, "🔹")
+                
+                if i == current_option:
+                    # Выделяем выбранную опцию
+                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}   {self.selected_color} {icon} {option} {Style.RESET_ALL}")
+                else:
+                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}     {icon} {self.normal_color}{option}{Style.RESET_ALL}")
+                    
+                # Добавляем небольшой отступ между опциями
+                print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+                
+            # Рисуем нижнюю часть меню
+            self.draw_bottom_box(80)
+            
+            # Добавляем подсказку по управлению
+            print(f"{self.title_color}[↑/↓] Навигация [Enter] Выбрать [Esc] Вернуться в игру{Style.RESET_ALL}")
+            
+            # Получаем ввод пользователя
+            key = self.get_key()
+            
+            # Обработка ввода
+            if key == 'UP':
+                # Перемещаемся вверх по меню
+                current_option = (current_option - 1) % len(options)
+            elif key == 'DOWN':
+                # Перемещаемся вниз по меню
+                current_option = (current_option + 1) % len(options)
+            elif key == 'ENTER':
+                # Обрабатываем выбор
+                if options[current_option] == "Продолжить":
+                    return  # Просто выходим из меню паузы
+                elif options[current_option] == "Сохранить игру":
+                    self.save_current_game()
+                    return
+                elif options[current_option] == "Настройки":
+                    self.settings_menu()
+                elif options[current_option] == "Выйти в главное меню":
+                    if self.confirm_exit("Вы уверены, что хотите выйти в главное меню?"):
+                        self.auto_save_warning()
+                        self.is_running = False
+                        self.is_in_main_menu = True
+                        return
+                elif options[current_option] == "Выйти из игры":
+                    if self.confirm_exit("Вы уверены, что хотите выйти из игры?"):
+                        self.auto_save_warning()
+                        self.is_running = False
+                        self.should_exit = True
+                        return
+            elif key == 'ESC':
+                # Возвращаемся в игру
+                return
+                
+            # Если выбрана опция "Сохранить игру" или "Настройки", показываем меню паузы снова
+            if key in KEY_ENTER and options[current_option] in ["Сохранить игру", "Настройки"] and self.running:
+                continue 

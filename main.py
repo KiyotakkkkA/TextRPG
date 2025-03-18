@@ -4,7 +4,6 @@ from colorama import init, Fore, Style
 from src.models.inventory.types.Material import Material
 from src.Game import Game
 from src.ui.GameMenu import GameMenu
-from src.ui.screens.main import main_menu
 
 def main():
     # Инициализация colorama
@@ -12,13 +11,15 @@ def main():
     
     # Создание и инициализация игры
     game = Game()
+    # Явно указываем, что это новая игра
+    game.is_new_game = True
     game.preload()
     
     # Создание игрового меню
     menu = GameMenu(game)
     
     # Запускаем главное меню
-    main_menu(menu)
+    menu.main_menu()
 
 if __name__ == "__main__":
     # Настраиваем логирование, если нужно

@@ -7,6 +7,7 @@ class TraderNPC(NPC):
         super().__init__(id, name, description, "trader", location_id)
         self.buys = {}  # {item_id: price_modifier}
         self.sells = {}  # {item_id: {price: X, count: Y}}
+        self.trade_exp = 1  # Опыт торговли за единицу товара (по умолчанию)
         
     def add_buy_item(self, item_id, price_modifier=1.0):
         """Добавляет предмет, который торговец будет покупать"""

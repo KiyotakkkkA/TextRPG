@@ -14,7 +14,7 @@ class GotoObjective(QuestObjective):
             return False
         
         # Проверяем, находится ли игрок в нужной локации
-        if player.current_location and player.current_location.id == self.location_id:
+        if player.current_location and player.current_location == self.location_id:
             if not self.visited:
                 self.visited = True
                 self.completed = True

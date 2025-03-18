@@ -1,0 +1,184 @@
+{
+  "id": "crystal_magic",
+  "name": "Кристальная магия",
+  "description": "Искусство использования энергии осколков Великого Кристалла для создания магических эффектов. В отличие от традиционной магии, кристальная магия основана на резонансе с осколками и взаимодействии с их энергией.",
+  "max_level": 100,
+  "base_exp": 250,
+  "exp_factor": 1.6,
+  "levels": [
+    {
+      "level": 1,
+      "unlocks": ["crystal_spark"],
+      "provides": {
+        "crystal_magic_damage": 3,
+        "mana_regeneration": 1
+      },
+      "message": "Вы можете создавать простейшие кристальные искры, манипулируя энергией осколков."
+    },
+    {
+      "level": 5,
+      "unlocks": ["crystal_shield"],
+      "provides": {
+        "crystal_magic_damage": 5,
+        "mana_regeneration": 2,
+        "crystal_magic_cost_reduction": 5
+      },
+      "message": "Вы научились формировать защитный барьер из кристальной энергии."
+    },
+    {
+      "level": 10,
+      "unlocks": ["elemental_resonance"],
+      "provides": {
+        "crystal_magic_damage": 8,
+        "mana_regeneration": 3,
+        "crystal_magic_cost_reduction": 10,
+        "element_attunement": 1
+      },
+      "message": "Вы можете настраиваться на элементальные осколки и направлять их энергию в виде стихийных атак."
+    },
+    {
+      "level": 15,
+      "unlocks": ["crystal_vision"],
+      "provides": {
+        "crystal_magic_damage": 10,
+        "mana_regeneration": 4,
+        "crystal_magic_cost_reduction": 15,
+        "element_attunement": 2,
+        "crystal_perception": 1
+      },
+      "message": "Вы можете использовать осколки для временного усиления своего зрения, видя скрытое и магические потоки."
+    },
+    {
+      "level": 20,
+      "unlocks": ["shard_blast"],
+      "provides": {
+        "crystal_magic_damage": 15,
+        "mana_regeneration": 5,
+        "crystal_magic_cost_reduction": 20,
+        "element_attunement": 3,
+        "crystal_perception": 2,
+        "crystal_magic_aoe": 1
+      },
+      "message": "Вы освоили создание мощного взрыва кристальной энергии, поражающего несколько целей."
+    },
+    {
+      "level": 25,
+      "unlocks": ["mind_link"],
+      "provides": {
+        "crystal_magic_damage": 18,
+        "mana_regeneration": 6,
+        "crystal_magic_cost_reduction": 25,
+        "element_attunement": 3,
+        "crystal_perception": 3,
+        "crystal_magic_aoe": 2,
+        "mental_barrier": 1
+      },
+      "message": "С помощью осколков разума вы можете устанавливать временную ментальную связь с союзниками или существами."
+    },
+    {
+      "level": 30,
+      "unlocks": ["crystal_healing"],
+      "provides": {
+        "crystal_magic_damage": 20,
+        "mana_regeneration": 7,
+        "crystal_magic_cost_reduction": 30,
+        "element_attunement": 4,
+        "crystal_perception": 3,
+        "crystal_magic_aoe": 2,
+        "mental_barrier": 2,
+        "healing_efficiency": 1
+      },
+      "message": "Вы научились использовать энергию осколков созидания для лечения ран и восстановления жизненных сил."
+    },
+    {
+      "level": 40,
+      "unlocks": ["reality_manipulation"],
+      "provides": {
+        "crystal_magic_damage": 25,
+        "mana_regeneration": 8,
+        "crystal_magic_cost_reduction": 35,
+        "element_attunement": 5,
+        "crystal_perception": 4,
+        "crystal_magic_aoe": 3,
+        "mental_barrier": 3,
+        "healing_efficiency": 2,
+        "reality_stabilization": 1
+      },
+      "message": "С помощью осколков искажения вы можете на короткое время изменять локальные законы реальности."
+    },
+    {
+      "level": 50,
+      "unlocks": ["elemental_fusion"],
+      "provides": {
+        "crystal_magic_damage": 30,
+        "mana_regeneration": 10,
+        "crystal_magic_cost_reduction": 40,
+        "element_attunement": 6,
+        "crystal_perception": 5,
+        "crystal_magic_aoe": 4,
+        "mental_barrier": 4,
+        "healing_efficiency": 3,
+        "reality_stabilization": 2,
+        "elemental_mastery": 1
+      },
+      "message": "Вы достигли мастерства в объединении энергии различных элементальных осколков, создавая комплексные магические эффекты."
+    },
+    {
+      "level": 65,
+      "unlocks": ["crystal_construct_summoning"],
+      "provides": {
+        "crystal_magic_damage": 35,
+        "mana_regeneration": 12,
+        "crystal_magic_cost_reduction": 45,
+        "element_attunement": 7,
+        "crystal_perception": 6,
+        "crystal_magic_aoe": 5,
+        "mental_barrier": 5,
+        "healing_efficiency": 4,
+        "reality_stabilization": 3,
+        "elemental_mastery": 2,
+        "summoning_control": 1
+      },
+      "message": "Вы можете создавать временные кристальные конструкты, которые сражаются на вашей стороне."
+    },
+    {
+      "level": 80,
+      "unlocks": ["shard_storm"],
+      "provides": {
+        "crystal_magic_damage": 40,
+        "mana_regeneration": 15,
+        "crystal_magic_cost_reduction": 50,
+        "element_attunement": 8,
+        "crystal_perception": 7,
+        "crystal_magic_aoe": 6,
+        "mental_barrier": 6,
+        "healing_efficiency": 5,
+        "reality_stabilization": 4,
+        "elemental_mastery": 3,
+        "summoning_control": 2,
+        "crystal_storm_duration": 1
+      },
+      "message": "Вы освоили создание мощной кристальной бури, которая поражает всех врагов в большой области."
+    },
+    {
+      "level": 100,
+      "unlocks": ["crystal_ascension"],
+      "provides": {
+        "crystal_magic_damage": 50,
+        "mana_regeneration": 20,
+        "crystal_magic_cost_reduction": 60,
+        "element_attunement": 10,
+        "crystal_perception": 10,
+        "crystal_magic_aoe": 8,
+        "mental_barrier": 8,
+        "healing_efficiency": 7,
+        "reality_stabilization": 5,
+        "elemental_mastery": 5,
+        "summoning_control": 3,
+        "crystal_storm_duration": 2,
+        "crystal_transcendence": 1
+      },
+      "message": "Вы достигли высшего мастерства кристальной магии. На короткое время вы можете соединиться с осколками, приобретая кристальную форму с невероятными магическими способностями."
+    }
+  ]
+}

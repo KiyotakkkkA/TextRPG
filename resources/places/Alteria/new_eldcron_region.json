@@ -1,0 +1,185 @@
+{
+  "locations": [
+    {
+      "id": "new_eldcron_city",
+      "name": "Новый Эльдкрон",
+      "first_spawn_at": true,
+      "description": "Столица Содружества Нового Рассвета, построенная рядом с руинами древней столицы. Город представляет собой удивительное сочетание магии и технологий. Высокие башни из белого камня увенчаны кристальными куполами, собирающими энергию солнца. На улицах можно встретить как магов в традиционных мантиях, так и инженеров с механическими приспособлениями.",
+      "is_safe": true,
+      "effects": {
+        "crystal_resonance": {
+          "description": "Близость к руинам древнего Эльдкрона усиливает связь Искателей с осколками",
+          "stat_boost": {
+            "crystal_sensing": 5
+          }
+        }
+      }
+    },
+    {
+      "id": "academy_district",
+      "name": "Академический квартал",
+      "description": "Район, где располагается Академия Кристальных Наук и множество магических лабораторий. Воздух здесь буквально звенит от магической энергии, а между зданиями курсируют студенты в синих мантиях с эмблемами различных факультетов.",
+      "is_safe": true,
+      "effects": {
+        "academic_atmosphere": {
+          "description": "Атмосфера учености и исследований способствует интеллектуальному развитию",
+          "stat_boost": {
+            "intelligence": 5,
+            "magic_regeneration": 10
+          }
+        }
+      }
+    },
+    {
+      "id": "trade_district",
+      "name": "Торговый квартал",
+      "description": "Оживленный район с множеством магазинов, мастерских и рынков. Здесь можно найти товары со всех уголков Альтерии, от экзотических специй Диких Земель до магитех-устройств Империи Железной Короны.",
+      "is_safe": true
+    },
+    {
+      "id": "artisans_quarter",
+      "name": "Квартал ремесленников",
+      "description": "Район, где сосредоточены мастерские лучших ремесленников Нового Эльдкрона. Звон молотов кузнецов смешивается с гудением магических станков ювелиров, работающих с кристаллами.",
+      "is_safe": true
+    },
+    {
+      "id": "ancient_ruins",
+      "name": "Руины древнего Эльдкрона",
+      "description": "Остатки великой столицы, разрушенной во время Раскола. Несмотря на тысячелетие, прошедшее с катастрофы, многие здания все еще стоят, поддерживаемые древней магией. В центре руин находится кратер, где когда-то располагался Великий Кристалл.",
+      "required_level": 5,
+      "monsters": {
+        "crystal_construct": { "max_count": 5, "respawn_time": 240 },
+        "shadow_residue": { "max_count": 3, "respawn_time": 300 }
+      },
+      "resources": {
+        "crystal_dust": { "max_count": 8, "respawn_time": 120 },
+        "ancient_relic": { "max_count": 3, "respawn_time": 600 }
+      },
+      "effects": {
+        "reality_distortion": {
+          "description": "Остаточная энергия Раскола искажает реальность вокруг",
+          "status_effects": {
+            "random_teleport": {
+              "chance": 0.05,
+              "description": "Случайная телепортация на небольшое расстояние"
+            }
+          }
+        }
+      },
+      "npcs": ["professor_kalandria"]
+    },
+    {
+      "id": "crystal_fracture",
+      "name": "Кристальный разлом",
+      "description": "Глубокая трещина в земле, появившаяся в момент Раскола. Стены разлома усеяны мелкими кристаллами, излучающими мягкое свечение. На дне сконцентрирована мощная магическая энергия, привлекающая опасных существ.",
+      "required_level": 8,
+      "required_quest": "academy_investigation",
+      "monsters": {
+        "crystal_elemental": { "max_count": 2, "respawn_time": 600 },
+        "void_spawn": { "max_count": 4, "respawn_time": 300 }
+      },
+      "resources": {
+        "creation_shard": { "max_count": 2, "respawn_time": 900 },
+        "elemental_essence": { "max_count": 5, "respawn_time": 300 }
+      },
+      "effects": {
+        "crystal_radiance": {
+          "description": "Излучение кристаллов дает временное усиление магии, но истощает физически",
+          "stat_boost": {
+            "magic_power": 15
+          },
+          "stat_penalty": {
+            "stamina_regen": -20
+          }
+        }
+      }
+    },
+    {
+      "id": "whispering_woods",
+      "name": "Шепчущий лес",
+      "description": "Лес на окраине Нового Эльдкрона, измененный магией осколков. Деревья здесь достигают невероятных размеров, а их листва светится в темноте. Местные жители утверждают, что иногда слышат, как деревья перешептываются между собой.",
+      "monsters": {
+        "wood_sprite": { "max_count": 6, "respawn_time": 180 },
+        "crystal_fox": { "max_count": 4, "respawn_time": 240 }
+      },
+      "resources": {
+        "luminous_bark": { "max_count": 7, "respawn_time": 240 },
+        "whispering_flower": { "max_count": 5, "respawn_time": 300 },
+        "mind_shard": { "max_count": 2, "respawn_time": 1200 }
+      }
+    },
+    {
+      "id": "crystal_lake",
+      "name": "Кристальное озеро",
+      "description": "Озеро с кристально чистой водой, в глубинах которого можно увидеть множество мелких осколков. Вода озера обладает целебными свойствами и привлекает путешественников, желающих излечить свои недуги.",
+      "monsters": {
+        "water_elemental": { "max_count": 3, "respawn_time": 400 },
+        "crystal_crab": { "max_count": 5, "respawn_time": 240 }
+      },
+      "resources": {
+        "healing_water": { "max_count": 10, "respawn_time": 180 },
+        "water_shard": { "max_count": 3, "respawn_time": 700 }
+      },
+      "effects": {
+        "rejuvenation": {
+          "description": "Вода озера восстанавливает здоровье и снимает усталость",
+          "healing": {
+            "health_per_second": 5,
+            "duration": 30
+          }
+        }
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "new_eldcron_city",
+      "to": "academy_district",
+      "bidirectional": true
+    },
+    {
+      "from": "new_eldcron_city",
+      "to": "trade_district",
+      "bidirectional": true
+    },
+    {
+      "from": "new_eldcron_city",
+      "to": "artisans_quarter",
+      "bidirectional": true
+    },
+    {
+      "from": "new_eldcron_city",
+      "to": "ancient_ruins",
+      "bidirectional": true,
+      "required_level": 5
+    },
+    {
+      "from": "ancient_ruins",
+      "to": "crystal_fracture",
+      "bidirectional": true,
+      "required_level": 8,
+      "required_quest": "academy_investigation"
+    },
+    {
+      "from": "new_eldcron_city",
+      "to": "whispering_woods",
+      "bidirectional": true
+    },
+    {
+      "from": "whispering_woods",
+      "to": "crystal_lake",
+      "bidirectional": true
+    },
+    {
+      "from": "trade_district",
+      "to": "artisans_quarter",
+      "bidirectional": true
+    },
+    {
+      "from": "academy_district",
+      "to": "ancient_ruins",
+      "bidirectional": true,
+      "required_level": 5
+    }
+  ]
+}

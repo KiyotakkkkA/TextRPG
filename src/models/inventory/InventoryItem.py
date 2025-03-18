@@ -29,6 +29,10 @@ class InventoryItem:
     def get_rarity(self):
         return "COMMON"
 
+    def get_type(self):
+        """Возвращает тип предмета"""
+        return "Предмет"
+
     def set_rarity(self, rarity):
         self.rarity = rarity
 

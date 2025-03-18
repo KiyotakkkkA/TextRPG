@@ -4,6 +4,7 @@ import sys
 from src.models.inventory.InventoryItem import InventoryItem
 from src.loaders.Loader import Loader
 from src.models.inventory.types.Material import Material
+from src.models.inventory.types.Armor import Armor
 from src.utils.Logger import Logger
 # Импортируйте здесь другие типы предметов по мере необходимости
 
@@ -65,6 +66,20 @@ class ItemsLoader(Loader):
                     item_id  # Передаем ID предмета
                 )
                 return material
+            
+            elif item_type == "armor":
+                # Создаем броню
+                armor = Armor(
+                    item_data.get("name", "Неизвестная броня"),
+                    count,
+                    item_data.get("description", ""),
+                    item_data.get("value", 0),
+                    item_data.get("rarity", "COMMON"),
+                    item_id,  # Передаем ID предмета
+                    item_data.get("slot", "body"),  # Слот экипировки
+                    item_data.get("characteristics", None)  # Характеристики брони
+                )
+                return armor
             # Здесь можно добавить другие типы предметов
             
             # Если тип неизвестен, создаем базовый предмет инвентаря

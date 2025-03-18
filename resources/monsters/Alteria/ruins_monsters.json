@@ -1,0 +1,118 @@
+{
+  "crystal_construct": {
+    "name": "Кристальный конструкт",
+    "description": "Ожившая груда кристаллов, напитанная энергией древних руин. Эти существа не агрессивны до тех пор, пока кто-то не подойдет слишком близко к крупным осколкам.",
+    "level": 5,
+    "health": 50,
+    "damage": 8,
+    "armor": 10,
+    "magic_resist": 15,
+    "weaknesses": ["lightning", "physical"],
+    "resistances": ["fire", "cold"],
+    "is_elite": false,
+    "drops": {
+      "crystal_dust": {
+        "chance": 0.8,
+        "min": 2,
+        "max": 5
+      },
+      "minor_creation_shard": {
+        "chance": 0.1,
+        "min": 1,
+        "max": 1
+      }
+    },
+    "abilities": [
+      {
+        "name": "Кристальный выброс",
+        "description": "Выбрасывает острые кристальные осколки во все стороны",
+        "damage": 6,
+        "cooldown": 3,
+        "type": "magic",
+        "element": "crystal",
+        "aoe": true
+      },
+      {
+        "name": "Укрепление",
+        "description": "Временно увеличивает броню, поглощая ближайшие кристальные фрагменты",
+        "cooldown": 5,
+        "type": "buff",
+        "stats": {
+          "armor": 5
+        },
+        "duration": 3
+      }
+    ],
+    "behaviour": "defensive",
+    "aggression_distance": 3,
+    "combat_style": "ranged",
+    "loot_table": "crystal_entities",
+    "xp_reward": 35
+  },
+  "twisted_rat": {
+    "name": "Искажённая крыса",
+    "description": "Обычная крыса, мутировавшая из-за длительного воздействия осколков искажения. Тело покрыто странными наростами, а глаза светятся фиолетовым светом. Очень агрессивна и непредсказуема.",
+    "level": 3,
+    "health": 20,
+    "damage": 4,
+    "armor": 2,
+    "magic_resist": 5,
+    "weaknesses": ["fire", "light"],
+    "resistances": ["poison", "shadow"],
+    "is_elite": false,
+    "drops": {
+      "twisted_fur": {
+        "chance": 0.6,
+        "min": 1,
+        "max": 2
+      },
+      "rat_tooth": {
+        "chance": 0.4,
+        "min": 1,
+        "max": 3
+      },
+      "minor_distortion_essence": {
+        "chance": 0.05,
+        "min": 1,
+        "max": 1
+      }
+    },
+    "abilities": [
+      {
+        "name": "Искажающий укус",
+        "description": "Укус, который имеет шанс вызвать временное помутнение сознания",
+        "damage": 3,
+        "cooldown": 2,
+        "type": "physical",
+        "status_effect": {
+          "type": "confusion",
+          "chance": 0.2,
+          "duration": 2
+        }
+      },
+      {
+        "name": "Вспышка искажения",
+        "description": "Высвобождает небольшой импульс искажающей энергии",
+        "damage": 5,
+        "cooldown": 4,
+        "type": "magic",
+        "element": "distortion",
+        "range": 2
+      }
+    ],
+    "behaviour": "aggressive",
+    "aggression_distance": 6,
+    "combat_style": "melee",
+    "loot_table": "twisted_creatures",
+    "xp_reward": 15,
+    "visual": {
+      "model": "twisted_rat_model.obj",
+      "texture": "twisted_rat_texture.png",
+      "animation_idle": "twisted_rat_idle",
+      "animation_attack": "twisted_rat_attack",
+      "animation_death": "twisted_rat_death",
+      "glow": true,
+      "glow_color": "#9966cc"
+    }
+  }
+}

@@ -5,7 +5,7 @@ def show_glossary(self):
     from src.ui.GameMenu import BOX_CHARS, ICONS
     """Отображает глоссарий игры с разными категориями"""
     current_tab = 0
-    tabs = ["Ресурсы", "Персонажи"]
+    tabs = ["Ресурсы", "Персонажи", "Монстры"]
     search_query = ""
     search_mode = False
     
@@ -19,8 +19,10 @@ def show_glossary(self):
         # Получаем данные в зависимости от текущей вкладки
         if current_tab == 0:  # Ресурсы
             all_items = self.game.get_glossary_resources()
-        else:  # Персонажи
+        elif current_tab == 1:  # Персонажи
             all_items = self.game.get_glossary_npcs()
+        else:  # Монстры
+            all_items = self.game.get_glossary_monsters()
         
         # Применяем фильтр поиска, если задан
         filtered_items = {}
@@ -48,153 +50,188 @@ def show_glossary(self):
         else:
             search_color = self.normal_color
             
-        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {search_color}Поиск: {search_query + '▌' if search_mode else search_query}{Style.RESET_ALL}")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} " +
+              f"{search_color}Поиск:{Style.RESET_ALL} {search_query}" + 
+              " " * (70 - len(search_query) - 7))
         
         # Отображаем вкладки
-        tab_line = ""
+        self.draw_separator(80)
+        tab_line = f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} "
         for i, tab in enumerate(tabs):
             if i == current_tab:
-                tab_line += f"{self.selected_color} [{tab}] {Style.RESET_ALL}"
+                tab_line += f"{self.selected_color}{tab}{Style.RESET_ALL} | "
             else:
-                tab_line += f" {tab} "
-        
-        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {tab_line}")
-        
-        if search_query and not display_items:
-            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {self.info_color}Ничего не найдено по запросу '{search_query}'{Style.RESET_ALL}")
+                tab_line += f"{self.normal_color}{tab}{Style.RESET_ALL} | "
+        print(tab_line.rstrip('| '))
         
         self.draw_separator(80)
         
-        # Отображаем содержимое текущей вкладки
+        # Получаем информацию о текущей отслеживаемой цели
+        tracked_info = self.game.get_tracked_target_info()
+        tracked_target_id = tracked_info["target_id"] if tracked_info else None
+        tracked_target_type = tracked_info["target_type"] if tracked_info else None
+        
+        # Отображаем список элементов
         if not display_items:
-            if current_tab == 0:
-                print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {self.normal_color}В глоссарии пока нет ресурсов.{Style.RESET_ALL}")
-            else:
-                print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {self.normal_color}В глоссарии пока нет персонажей.{Style.RESET_ALL}")
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} " +
+                  f"{self.error_color}Нет доступных записей{Style.RESET_ALL}")
         else:
             for i, (item_id, item_info) in enumerate(display_items.items()):
-                # Определяем цвет и стиль для выбранного элемента
-                if i == current_selection and selectable_items:
-                    item_style = self.selected_color
-                    prefix = "➤ "
-                    highlight_box = True
+                # Определяем иконку в зависимости от вкладки
+                if current_tab == 0:  # Ресурсы
+                    icon = ICONS.get('resource', '📦')
+                    current_type = "resource"
+                elif current_tab == 1:  # Персонажи
+                    icon = ICONS.get('npc', '👤')
+                    current_type = "npc"
+                else:  # Монстры
+                    icon = ICONS.get('monster', '👹')
+                    current_type = "monster"
+                
+                # Добавляем иконку лупы, если эта цель отслеживается
+                is_tracked = (tracked_target_id == item_id and tracked_target_type == current_type)
+                track_icon = "🔍 " if is_tracked else ""
+                
+                if i == current_selection:
+                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} " +
+                          f"{self.selected_color}❯ {track_icon}{icon} {item_info['name']}{Style.RESET_ALL}")
                 else:
-                    item_style = self.highlight_color
-                    prefix = "  "
-                    highlight_box = False
-                
-                # Проверяем, отслеживается ли этот элемент
-                is_tracked = (self.game.tracked_target == item_id and 
-                                ((current_tab == 0 and self.game.tracked_target_type == "resource") or
-                                (current_tab == 1 and self.game.tracked_target_type == "npc")))
-                
-                track_indicator = "🔍 " if is_tracked else ""
-                
-                # Создаем мини-рамку для каждого элемента
-                if highlight_box:
-                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {prefix}{self.selected_color}┌─{'─' * (len(item_info['name']) + len(track_indicator) + 2)}┐{Style.RESET_ALL}")
-                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {prefix}{self.selected_color}│ {track_indicator}{item_info['name']} │{Style.RESET_ALL}")
-                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {prefix}{self.selected_color}└─{'─' * (len(item_info['name']) + len(track_indicator) + 2)}┘{Style.RESET_ALL}")
-                else:
-                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {prefix}{item_style}{track_indicator}{item_info['name']}{Style.RESET_ALL}")
-                
-                # Описание с отступом и оформлением
-                wrapped_desc = self.wrap_text(item_info['description'], 70, 5)
-                print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}     {Fore.LIGHTCYAN_EX}Описание:{Style.RESET_ALL} {wrapped_desc}")
-                
-                # Отображаем локации с улучшенным оформлением
-                if current_tab == 0:  # Для ресурсов
-                    if item_info["locations"]:
-                        location_names = []
-                        
-                        # Проверяем, отслеживается ли этот ресурс
-                        is_resource_tracked = (self.game.tracked_target == item_id and 
-                                                self.game.tracked_target_type == "resource")
-                        
-                        for loc_id in item_info["locations"]:
-                            location = self.game.get_location(loc_id)
-                            loc_name = location.name if location else loc_id
-                            
-                            # Если этот ресурс отслеживается и эта локация текущая цель
-                            if is_resource_tracked and loc_id == self.game.tracked_location:
-                                loc_name = f"{loc_name} {Fore.LIGHTGREEN_EX}[⟐ текущая цель]{Style.RESET_ALL}"
-                            
-                            location_names.append(loc_name)
-                        
-                        location_str = ", ".join(location_names)
-                        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}     {Fore.LIGHTYELLOW_EX}Можно найти в:{Style.RESET_ALL} {location_str}")
-                    else:
-                        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}     {Fore.LIGHTYELLOW_EX}Место обнаружения:{Style.RESET_ALL} {Fore.LIGHTRED_EX}Неизвестно{Style.RESET_ALL}")
-                else:  # Для NPC
-                    if item_info["location"]:
-                        location = self.game.get_location(item_info["location"])
-                        location_name = location.name if location else item_info["location"]
-                        
-                        # Если этот NPC отслеживается
-                        if (self.game.tracked_target == item_id and 
-                            self.game.tracked_target_type == "npc"):
-                            location_name = f"{location_name} {Fore.LIGHTGREEN_EX}[⟐ текущая цель]{Style.RESET_ALL}"
-                            
-                        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}     {Fore.LIGHTYELLOW_EX}Находится в:{Style.RESET_ALL} {location_name}")
-                    else:
-                        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}     {Fore.LIGHTYELLOW_EX}Местоположение:{Style.RESET_ALL} {Fore.LIGHTRED_EX}Неизвестно{Style.RESET_ALL}")
-                
-                print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}")
+                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}   " +
+                          f"{track_icon}{icon} {item_info['name']}")
         
-        # Отображаем подсказки и ждем нажатия клавиши
         self.draw_separator(80)
-        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} [←][→] Вкладки | [↑][↓] Выбор | [Y] Отследить | [/] Поиск | [ESC] Назад")
+        
+        # Если есть выбранный элемент, показываем его описание
+        if selectable_items and current_selection < len(selectable_items):
+            selected_id = selectable_items[current_selection]
+            selected_item = display_items[selected_id]
+            
+            print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} " +
+                  f"{self.highlight_color}{selected_item['name']} ({selected_id}){Style.RESET_ALL}")
+            
+            # Описание элемента
+            description = selected_item.get('description', 'Нет описания')
+            # Разбиваем описание на строки по 70 символов
+            desc_lines = [description[i:i+70] for i in range(0, len(description), 70)]
+            for line in desc_lines:
+                print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {line}")
+            
+            # Дополнительная информация в зависимости от вкладки
+            if current_tab == 0:  # Ресурсы
+                locations = selected_item.get('locations', [])
+                if locations:
+                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} ")
+                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} " +
+                          f"{self.highlight_color}Встречается в локациях:{Style.RESET_ALL}")
+                    for loc_id in locations:
+                        loc = self.game.get_location(loc_id)
+                        loc_name = loc.name if loc else loc_id
+                        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}   " +
+                              f"{ICONS.get('location', '🗺️')} {loc_name}")
+            
+            elif current_tab == 1:  # Персонажи
+                location_id = selected_item.get('location')
+                if location_id:
+                    loc = self.game.get_location(location_id)
+                    loc_name = loc.name if loc else location_id
+                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} ")
+                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} " +
+                          f"{self.highlight_color}Находится в:{Style.RESET_ALL} " +
+                          f"{ICONS.get('location', '🗺️')} {loc_name}")
+            
+            else:  # Монстры
+                level = selected_item.get('level', 1)
+                print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} ")
+                print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} " +
+                      f"{self.highlight_color}Уровень:{Style.RESET_ALL} {level}")
+                
+                locations = selected_item.get('locations', [])
+                if locations:
+                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} ")
+                    print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} " +
+                          f"{self.highlight_color}Встречается в локациях:{Style.RESET_ALL}")
+                    for loc_id in locations:
+                        loc = self.game.get_location(loc_id)
+                        loc_name = loc.name if loc else loc_id
+                        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL}   " +
+                              f"{ICONS.get('location', '🗺️')} {loc_name}")
+        
+        self.draw_separator(80)
+        
+        # Отображаем подсказки управления
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} " +
+              f"{self.normal_color}←→: Смена вкладки | " +
+              f"↑↓: Навигация | " +
+              f"Y: Отслеживать | " +
+              f"S: Поиск | " +
+              f"Esc: Назад{Style.RESET_ALL}")
+        
+        # Нижняя часть рамки
         self.draw_bottom_box(80)
         
-        # Получаем нажатую клавишу
-        if search_mode:
-            # Используем обычный ввод для поиска
-            key = input()
-            if key == "":
-                # Enter завершает режим поиска
-                search_mode = False
-                current_selection = 0  # Сбрасываем выбор на первый элемент
-            elif key.lower() == "esc" or key == "\x1b":
-                # Escape отменяет режим поиска
+        # Обрабатываем ввод пользователя
+        key = self.get_key()
+        
+        if key == 'ESC':
+            if search_mode:
                 search_mode = False
                 search_query = ""
             else:
-                # Обновляем строку поиска
-                search_query = key
-            continue
+                break
         
-        key = self.get_key()
-        
-        if key == 'LEFT':
+        elif key == 'LEFT' and not search_mode:
             current_tab = (current_tab - 1) % len(tabs)
-            current_selection = 0  # Сбрасываем выбор при смене вкладки
-        elif key == 'RIGHT':
+            current_selection = 0
+        
+        elif key == 'RIGHT' and not search_mode:
             current_tab = (current_tab + 1) % len(tabs)
-            current_selection = 0  # Сбрасываем выбор при смене вкладки
-        elif key == 'UP' and selectable_items:
-            current_selection = (current_selection - 1) % len(selectable_items)
-        elif key == 'DOWN' and selectable_items:
-            current_selection = (current_selection + 1) % len(selectable_items)
-        elif key == '/' or key == '?':
-            # Включаем режим поиска
-            search_mode = True
-            search_query = ""
-        elif key in ['y', 'Y'] and selectable_items:
-            # Отслеживаем выбранный элемент
-            selected_id = selectable_items[current_selection]
-            target_type = "resource" if current_tab == 0 else "npc"
-            
-            # Устанавливаем или отменяем отслеживание
-            if (self.game.tracked_target == selected_id and 
-                ((current_tab == 0 and self.game.tracked_target_type == "resource") or
-                    (current_tab == 1 and self.game.tracked_target_type == "npc"))):
-                # Если этот элемент уже отслеживается, отменяем отслеживание
-                self.game.untrack_target()
+            current_selection = 0
+        
+        elif key == 'UP' and not search_mode:
+            if selectable_items:
+                current_selection = (current_selection - 1) % len(selectable_items)
+        
+        elif key == 'DOWN' and not search_mode:
+            if selectable_items:
+                current_selection = (current_selection + 1) % len(selectable_items)
+        
+        elif (key == 'Y' or key == 'y') and not search_mode:
+            # Отслеживание выбранной цели
+            if selectable_items and current_selection < len(selectable_items):
+                selected_id = selectable_items[current_selection]
+                
+                # Определяем тип цели в зависимости от вкладки
+                if current_tab == 0:  # Ресурсы
+                    target_type = "resource"
+                elif current_tab == 1:  # Персонажи
+                    target_type = "npc"
+                else:  # Монстры
+                    target_type = "monster"
+                
+                # Устанавливаем или снимаем отслеживание
+                is_currently_tracked = (tracked_target_id == selected_id and tracked_target_type == target_type)
+                item_name = display_items[selected_id].get('name', selected_id)
+                tracking_result = self.game.track_target(selected_id, target_type)
+                
+                # Показываем сообщение об успешном отслеживании или снятии отслеживания
+                if is_currently_tracked:
+                    self.show_message(f"{Fore.CYAN}Отслеживание цели {item_name} отменено!{Style.RESET_ALL}")
+                elif tracking_result:
+                    self.show_message(f"{Fore.GREEN}Цель {item_name} отслеживается!{Style.RESET_ALL}")
+                else:
+                    self.show_message(f"{Fore.RED}Невозможно отслеживать цель {item_name}!{Style.RESET_ALL}")
             else:
-                # Иначе начинаем отслеживать
-                success = self.game.track_target(selected_id, target_type)
-                if not success:
-                    print(f"{self.error_color}Невозможно отследить этот элемент.{Style.RESET_ALL}")
-                    time.sleep(1)
-        elif key in ['\x1b', 'q', 'Q', 'ESC']:
-            return  # Выходим из глоссария при нажатии ESC
+                self.show_message(f"{Fore.RED}Нет выбранной цели для отслеживания!{Style.RESET_ALL}")
+        
+        elif key == 'S' or key == 's':
+            search_mode = not search_mode
+            if not search_mode:
+                search_query = ""
+        
+        elif search_mode:
+            if key == 'BACKSPACE':
+                search_query = search_query[:-1]
+            elif key == 'ENTER':
+                search_mode = False
+            elif len(key) == 1:  # Если это печатный символ
+                search_query += key

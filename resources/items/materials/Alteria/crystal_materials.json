@@ -1,0 +1,521 @@
+{
+  "crystal_dust": {
+    "name": "Кристальная пыль",
+    "description": "Мелкие частицы, образовавшиеся от разрушения осколков. Светится слабым голубоватым светом в темноте.",
+    "type": "essence",
+    "rarity": "COMMON",
+    "value": 10,
+    "weight": 0.1,
+    "stackable": true,
+    "max_stack": 100,
+    "properties": {
+      "magic_power": 2,
+      "purity": 0.4,
+      "stability": 0.9
+    },
+    "sources": {
+      "locations": ["ancient_ruins", "crystal_fracture"],
+      "monster_drops": {
+        "crystal_construct": { "chance": 0.8, "min": 2, "max": 5 }
+      },
+      "required_skill": "crystal_sensing",
+      "required_skill_level": 1
+    },
+    "uses": {
+      "crafting": ["minor_mana_potion", "glow_lamp", "resonance_crystal"],
+      "alchemy_exp": 5,
+      "magic_exp": 3
+    }
+  },
+
+  "minor_creation_shard": {
+    "name": "Малый осколок созидания",
+    "description": "Небольшой фрагмент осколка созидания. Содержит энергию жизни и восстановления.",
+    "type": "essence",
+    "rarity": "UNCOMMON",
+    "value": 50,
+    "weight": 0.2,
+    "stackable": true,
+    "max_stack": 20,
+    "properties": {
+      "magic_power": 10,
+      "healing_power": 5,
+      "stability": 0.7,
+      "element": "creation"
+    },
+    "sources": {
+      "locations": ["crystal_fracture", "whispering_woods"],
+      "monster_drops": {
+        "crystal_construct": { "chance": 0.1, "min": 1, "max": 1 }
+      },
+      "required_skill": "crystal_sensing",
+      "required_skill_level": 3
+    },
+    "uses": {
+      "crafting": ["healing_crystal", "vitality_amulet"],
+      "enchanting": ["healing_enchant", "vigor_enchant"],
+      "alchemy_exp": 15,
+      "magic_exp": 20
+    }
+  },
+
+  "creation_shard": {
+    "name": "Осколок созидания",
+    "description": "Полноценный осколок созидания. Излучает теплую энергию и ускоряет рост растений поблизости.",
+    "type": "essence",
+    "rarity": "RARE",
+    "value": 200,
+    "weight": 0.5,
+    "stackable": true,
+    "max_stack": 10,
+    "properties": {
+      "magic_power": 25,
+      "healing_power": 15,
+      "stability": 0.6,
+      "element": "creation",
+      "regeneration": 3
+    },
+    "sources": {
+      "locations": ["crystal_fracture"],
+      "monster_drops": {
+        "crystal_elemental": { "chance": 0.4, "min": 1, "max": 2 }
+      },
+      "required_skill": "crystal_sensing",
+      "required_skill_level": 8
+    },
+    "uses": {
+      "crafting": ["regrowth_staff", "life_crystal", "vitality_belt"],
+      "enchanting": ["regeneration_enchant", "life_bond_enchant"],
+      "alchemy_exp": 40,
+      "magic_exp": 50
+    }
+  },
+
+  "shadow_essence": {
+    "name": "Теневая эссенция",
+    "description": "Сгусток темной энергии, полученный от теневых сущностей. Холодный на ощупь и поглощает свет вокруг себя.",
+    "type": "essence",
+    "rarity": "UNCOMMON",
+    "value": 45,
+    "weight": 0.2,
+    "stackable": true,
+    "max_stack": 20,
+    "properties": {
+      "magic_power": 8,
+      "stability": 0.5,
+      "element": "shadow",
+      "darkness_affinity": 10
+    },
+    "sources": {
+      "locations": ["ancient_ruins"],
+      "monster_drops": {
+        "shadow_residue": { "chance": 0.6, "min": 1, "max": 3 }
+      },
+      "required_skill": "crystal_sensing",
+      "required_skill_level": 5
+    },
+    "uses": {
+      "crafting": ["shadow_veil", "stealth_cloak", "night_vision_goggles"],
+      "enchanting": ["shadow_step_enchant", "darkness_enchant"],
+      "alchemy_exp": 15,
+      "magic_exp": 20
+    }
+  },
+
+  "void_fragment": {
+    "name": "Фрагмент пустоты",
+    "description": "Осколок с нестабильной структурой, словно искажающий пространство вокруг себя. Держащий его ощущает легкое головокружение.",
+    "type": "essence",
+    "rarity": "RARE",
+    "value": 120,
+    "weight": 0.3,
+    "stackable": true,
+    "max_stack": 10,
+    "properties": {
+      "magic_power": 15,
+      "stability": 0.3,
+      "element": "void",
+      "reality_distortion": 5
+    },
+    "sources": {
+      "locations": ["ancient_ruins"],
+      "monster_drops": {
+        "shadow_residue": { "chance": 0.3, "min": 1, "max": 1 },
+        "void_spawn": { "chance": 0.5, "min": 1, "max": 2 }
+      },
+      "required_skill": "crystal_sensing",
+      "required_skill_level": 7
+    },
+    "uses": {
+      "crafting": ["void_pouch", "distortion_lens", "reality_anchor"],
+      "enchanting": ["phase_shift_enchant", "blink_enchant"],
+      "alchemy_exp": 30,
+      "magic_exp": 40
+    }
+  },
+
+  "elemental_essence": {
+    "name": "Элементальная эссенция",
+    "description": "Чистая элементальная энергия, извлеченная из кристальных существ. Постоянно меняет цвет, циклически проходя через все стихии.",
+    "type": "essence",
+    "rarity": "UNCOMMON",
+    "value": 60,
+    "weight": 0.2,
+    "stackable": true,
+    "max_stack": 20,
+    "properties": {
+      "magic_power": 12,
+      "stability": 0.6,
+      "element": "variable",
+      "elemental_attunement": 8
+    },
+    "sources": {
+      "locations": ["crystal_fracture", "crystal_lake"],
+      "monster_drops": {
+        "crystal_elemental": { "chance": 0.9, "min": 3, "max": 6 },
+        "water_elemental": { "chance": 0.8, "min": 2, "max": 4 }
+      },
+      "required_skill": "crystal_sensing",
+      "required_skill_level": 6
+    },
+    "uses": {
+      "crafting": ["elemental_focus", "essence_extractor", "attunement_ring"],
+      "enchanting": ["elemental_attunement_enchant", "essence_drain_enchant"],
+      "alchemy_exp": 20,
+      "magic_exp": 25
+    }
+  },
+
+  "elemental_core": {
+    "name": "Элементальное ядро",
+    "description": "Концентрированная сущность элементаля. Пульсирует энергией и меняет окружающую температуру.",
+    "type": "essence",
+    "rarity": "EPIC",
+    "value": 250,
+    "weight": 1.0,
+    "stackable": true,
+    "max_stack": 5,
+    "properties": {
+      "magic_power": 30,
+      "stability": 0.5,
+      "element": "variable",
+      "elemental_power": 20
+    },
+    "sources": {
+      "monster_drops": {
+        "crystal_elemental": { "chance": 0.2, "min": 1, "max": 1 },
+        "water_elemental": { "chance": 0.1, "min": 1, "max": 1 }
+      },
+      "required_skill": "crystal_sensing",
+      "required_skill_level": 10
+    },
+    "uses": {
+      "crafting": ["elemental_staff", "core_stabilizer", "elemental_armor"],
+      "enchanting": [
+        "major_elemental_enchant",
+        "elemental_transformation_enchant"
+      ],
+      "alchemy_exp": 60,
+      "magic_exp": 80
+    }
+  },
+
+  "ancient_relic": {
+    "name": "Древняя реликвия",
+    "description": "Артефакт, созданный древней цивилизацией до Раскола. Содержит фрагменты знаний и технологий предыдущей эпохи.",
+    "type": "artifact",
+    "rarity": "RARE",
+    "value": 150,
+    "weight": 0.8,
+    "stackable": true,
+    "max_stack": 5,
+    "properties": {
+      "magic_power": 15,
+      "knowledge_value": 10,
+      "ancient_technology": 5
+    },
+    "sources": {
+      "locations": ["ancient_ruins"],
+      "required_skill": "archaeology",
+      "required_skill_level": 3
+    },
+    "uses": {
+      "research": ["ancient_knowledge", "pre_shattering_technology"],
+      "crafting": ["relic_weapon", "ancient_machinery", "knowledge_crystal"],
+      "archaeology_exp": 40,
+      "magic_exp": 15
+    }
+  },
+
+  "distortion_shard": {
+    "name": "Осколок искажения",
+    "description": "Нестабильный осколок, меняющий форму и свойства. Самый опасный тип осколков, способный вызвать пространственные аномалии.",
+    "type": "essence",
+    "rarity": "EPIC",
+    "value": 300,
+    "weight": 0.4,
+    "stackable": true,
+    "max_stack": 3,
+    "properties": {
+      "magic_power": 35,
+      "stability": 0.2,
+      "element": "chaos",
+      "reality_warping": 15,
+      "random_effect_chance": 0.05
+    },
+    "sources": {
+      "locations": ["crystal_fracture"],
+      "monster_drops": {
+        "void_spawn": { "chance": 0.3, "min": 1, "max": 1 }
+      },
+      "required_skill": "crystal_sensing",
+      "required_skill_level": 12
+    },
+    "uses": {
+      "crafting": ["chaos_orb", "reality_warper", "distortion_shield"],
+      "enchanting": ["chaos_enchant", "probability_manipulation_enchant"],
+      "alchemy_exp": 80,
+      "magic_exp": 100
+    }
+  },
+
+  "luminous_bark": {
+    "name": "Светящаяся кора",
+    "description": "Кора с деревьев Шепчущего леса. Излучает мягкое сияние и сохраняет тепло.",
+    "type": "herb",
+    "rarity": "COMMON",
+    "value": 20,
+    "weight": 0.3,
+    "stackable": true,
+    "max_stack": 50,
+    "properties": {
+      "light_intensity": 5,
+      "heat_retention": 3,
+      "magic_conductivity": 2
+    },
+    "sources": {
+      "locations": ["whispering_woods"],
+      "monster_drops": {
+        "wood_sprite": { "chance": 0.6, "min": 1, "max": 2 }
+      },
+      "required_skill": "herbalism",
+      "required_skill_level": 2
+    },
+    "uses": {
+      "crafting": ["light_potion", "glowing_ink", "heat_wrap"],
+      "cooking": ["warming_tea"],
+      "herbalism_exp": 10
+    }
+  },
+
+  "whispering_flower": {
+    "name": "Шепчущий цветок",
+    "description": "Редкий цветок, который издает тихие звуки, похожие на шепот. Считается, что он повторяет услышанные разговоры.",
+    "type": "herb",
+    "rarity": "UNCOMMON",
+    "value": 40,
+    "weight": 0.1,
+    "stackable": true,
+    "max_stack": 20,
+    "properties": {
+      "psychic_sensitivity": 8,
+      "mind_affecting": 5,
+      "healing_power": 2
+    },
+    "sources": {
+      "locations": ["whispering_woods"],
+      "monster_drops": {
+        "wood_sprite": { "chance": 0.4, "min": 1, "max": 2 }
+      },
+      "required_skill": "herbalism",
+      "required_skill_level": 5
+    },
+    "uses": {
+      "crafting": ["mind_potion", "thought_catcher", "telepathy_charm"],
+      "alchemy_exp": 20,
+      "herbalism_exp": 25
+    }
+  },
+
+  "mind_shard": {
+    "name": "Осколок разума",
+    "description": "Фрагмент Великого Кристалла, связанный с ментальными способностями. Усиливает восприятие и ментальные силы.",
+    "type": "essence",
+    "rarity": "RARE",
+    "value": 180,
+    "weight": 0.2,
+    "stackable": true,
+    "max_stack": 5,
+    "properties": {
+      "magic_power": 20,
+      "stability": 0.7,
+      "element": "mind",
+      "mental_amplification": 15
+    },
+    "sources": {
+      "locations": ["whispering_woods"],
+      "monster_drops": {
+        "crystal_fox": { "chance": 0.2, "min": 1, "max": 1 }
+      },
+      "required_skill": "crystal_sensing",
+      "required_skill_level": 9
+    },
+    "uses": {
+      "crafting": ["mind_crystal", "psychic_focus", "memory_pendant"],
+      "enchanting": ["telepathy_enchant", "mental_shield_enchant"],
+      "alchemy_exp": 40,
+      "magic_exp": 50
+    }
+  },
+
+  "water_shard": {
+    "name": "Водный осколок",
+    "description": "Осколок Кристалла, насыщенный водной стихией. Испускает прохладный туман и влияет на окружающую влажность.",
+    "type": "essence",
+    "rarity": "RARE",
+    "value": 160,
+    "weight": 0.4,
+    "stackable": true,
+    "max_stack": 10,
+    "properties": {
+      "magic_power": 22,
+      "stability": 0.8,
+      "element": "water",
+      "water_manipulation": 12
+    },
+    "sources": {
+      "locations": ["crystal_lake"],
+      "monster_drops": {
+        "water_elemental": { "chance": 0.3, "min": 1, "max": 1 },
+        "crystal_crab": { "chance": 0.1, "min": 1, "max": 1 }
+      },
+      "required_skill": "crystal_sensing",
+      "required_skill_level": 7
+    },
+    "uses": {
+      "crafting": ["water_staff", "breathing_amulet", "rain_caller"],
+      "enchanting": ["water_breathing_enchant", "frost_enchant"],
+      "alchemy_exp": 35,
+      "magic_exp": 45
+    }
+  },
+
+  "healing_water": {
+    "name": "Целебная вода",
+    "description": "Вода из Кристального озера, насыщенная энергией осколков созидания. Обладает мощными регенеративными свойствами.",
+    "type": "herb",
+    "rarity": "UNCOMMON",
+    "value": 30,
+    "weight": 0.5,
+    "stackable": true,
+    "max_stack": 10,
+    "properties": {
+      "healing_power": 10,
+      "purity": 0.9,
+      "magic_conductivity": 5
+    },
+    "sources": {
+      "locations": ["crystal_lake"],
+      "required_skill": "alchemy",
+      "required_skill_level": 3
+    },
+    "uses": {
+      "crafting": [
+        "greater_healing_potion",
+        "regeneration_elixir",
+        "cleansing_balm"
+      ],
+      "cooking": ["vitality_soup"],
+      "alchemy_exp": 25,
+      "herbalism_exp": 15
+    }
+  },
+
+  "fox_fur": {
+    "name": "Мех кристальной лисицы",
+    "description": "Мягкий мех с естественными кристаллическими вкраплениями. Обладает хорошими изоляционными свойствами и слабой магической проводимостью.",
+    "type": "material",
+    "rarity": "UNCOMMON",
+    "value": 35,
+    "weight": 0.4,
+    "stackable": true,
+    "max_stack": 20,
+    "properties": {
+      "warmth": 8,
+      "magic_conductivity": 3,
+      "durability": 15
+    },
+    "sources": {
+      "monster_drops": {
+        "crystal_fox": { "chance": 0.7, "min": 1, "max": 1 }
+      },
+      "required_skill": "skinning",
+      "required_skill_level": 3
+    },
+    "uses": {
+      "crafting": ["magic_insulated_gloves", "crystal_fox_hood", "warm_cloak"],
+      "tailoring_exp": 20
+    }
+  },
+
+  "minor_mind_shard": {
+    "name": "Малый осколок разума",
+    "description": "Небольшой фрагмент осколка разума. Слегка усиливает ментальное восприятие.",
+    "type": "essence",
+    "rarity": "UNCOMMON",
+    "value": 45,
+    "weight": 0.1,
+    "stackable": true,
+    "max_stack": 20,
+    "properties": {
+      "magic_power": 8,
+      "stability": 0.8,
+      "element": "mind",
+      "mental_amplification": 5
+    },
+    "sources": {
+      "monster_drops": {
+        "crystal_fox": { "chance": 0.2, "min": 1, "max": 1 }
+      },
+      "required_skill": "crystal_sensing",
+      "required_skill_level": 4
+    },
+    "uses": {
+      "crafting": ["clarity_charm", "minor_psychic_focus"],
+      "enchanting": ["perception_enchant", "minor_telepathy_enchant"],
+      "alchemy_exp": 15,
+      "magic_exp": 20
+    }
+  },
+
+  "crystal_fragment": {
+    "name": "Кристальный фрагмент",
+    "description": "Обычный осколок кристалла без явной элементальной привязки. Может быть использован как базовый компонент для магических изделий.",
+    "type": "essence",
+    "rarity": "COMMON",
+    "value": 15,
+    "weight": 0.2,
+    "stackable": true,
+    "max_stack": 50,
+    "properties": {
+      "magic_power": 5,
+      "stability": 0.9,
+      "element": "neutral",
+      "magic_conductivity": 10
+    },
+    "sources": {
+      "locations": ["ancient_ruins", "crystal_lake", "whispering_woods"],
+      "monster_drops": {
+        "crystal_crab": { "chance": 0.4, "min": 1, "max": 3 }
+      },
+      "required_skill": "crystal_sensing",
+      "required_skill_level": 1
+    },
+    "uses": {
+      "crafting": ["basic_wand", "simple_focus", "magic_conductor"],
+      "enchanting": ["basic_magical_enchant", "stability_enchant"],
+      "alchemy_exp": 5,
+      "magic_exp": 10
+    }
+  }
+}

@@ -1,0 +1,315 @@
+{
+  "crystal_construct": {
+    "name": "Кристальный конструкт",
+    "description": "Ожившая груда кристаллов, напитанная энергией древних руин. Эти существа не агрессивны до тех пор, пока кто-то не подойдет слишком близко к крупным осколкам.",
+    "level": 5,
+    "health": 50,
+    "damage": 8,
+    "armor": 10,
+    "magic_resist": 2,
+    "weaknesses": ["lightning", "physical"],
+    "resistances": ["fire", "cold"],
+    "is_elite": false,
+    "drops": {
+      "crystal_dust": {
+        "chance": 0.8,
+        "min": 2,
+        "max": 5
+      },
+      "minor_creation_shard": {
+        "chance": 0.1,
+        "min": 1,
+        "max": 1
+      }
+    },
+    "abilities": {
+      "crystal_spike": {
+        "description": "Выстреливает острым кристаллическим шипом",
+        "damage": 10,
+        "cooldown": 12
+      }
+    }
+  },
+
+  "shadow_residue": {
+    "name": "Теневой осадок",
+    "description": "Сгусток темной энергии, оставшийся после Раскола. Эти аморфные сущности поглощают свет и тепло окружающей среды.",
+    "level": 6,
+    "health": 40,
+    "damage": 12,
+    "armor": 0,
+    "magic_resist": 15,
+    "weaknesses": ["light", "fire"],
+    "resistances": ["physical", "cold", "poison"],
+    "is_elite": false,
+    "drops": {
+      "shadow_essence": {
+        "chance": 0.6,
+        "min": 1,
+        "max": 3
+      },
+      "void_fragment": {
+        "chance": 0.3,
+        "min": 1,
+        "max": 1
+      }
+    },
+    "abilities": {
+      "shadow_touch": {
+        "description": "Прикосновение тени высасывает жизненную энергию",
+        "damage": 6,
+        "heal_amount": 6,
+        "cooldown": 8
+      },
+      "obscure_vision": {
+        "description": "Снижает точность атак игрока",
+        "accuracy_reduction": 20,
+        "duration": 5,
+        "cooldown": 20
+      }
+    }
+  },
+
+  "crystal_elemental": {
+    "name": "Кристальный элементаль",
+    "description": "Большой сгусток чистой стихийной энергии в кристаллической форме. Эти создания обладают сознанием и высоким интеллектом, но агрессивны к нарушителям их территорий.",
+    "level": 10,
+    "health": 120,
+    "damage": 18,
+    "armor": 5,
+    "magic_resist": 20,
+    "is_elite": true,
+    "weaknesses": ["resonant", "null"],
+    "resistances": ["physical", "elemental"],
+    "drops": {
+      "elemental_essence": {
+        "chance": 0.9,
+        "min": 3,
+        "max": 6
+      },
+      "creation_shard": {
+        "chance": 0.4,
+        "min": 1,
+        "max": 2
+      },
+      "elemental_core": {
+        "chance": 0.2,
+        "min": 1,
+        "max": 1
+      }
+    },
+    "abilities": {
+      "crystal_burst": {
+        "description": "Взрыв кристальной энергии, поражающий все цели рядом",
+        "damage": 15,
+        "area_of_effect": 5,
+        "cooldown": 25
+      },
+      "crystal_shield": {
+        "description": "Создает защитный барьер, поглощающий урон",
+        "shield_amount": 30,
+        "duration": 10,
+        "cooldown": 40
+      },
+      "element_shift": {
+        "description": "Меняет свой элементальный тип, получая новые сопротивления",
+        "cooldown": 30
+      }
+    }
+  },
+
+  "void_spawn": {
+    "name": "Порождение пустоты",
+    "description": "Существо из разлома между измерениями, созданное искажающей силой осколков. Их форма постоянно меняется, что делает их непредсказуемыми.",
+    "level": 9,
+    "health": 85,
+    "damage": 14,
+    "armor": 3,
+    "magic_resist": 12,
+    "is_elite": false,
+    "weaknesses": ["holy", "reality"],
+    "resistances": ["void", "chaos"],
+    "drops": {
+      "void_essence": {
+        "chance": 0.7,
+        "min": 1,
+        "max": 3
+      },
+      "distortion_shard": {
+        "chance": 0.3,
+        "min": 1,
+        "max": 1
+      }
+    },
+    "abilities": {
+      "reality_shift": {
+        "description": "Искажает пространство вокруг цели, нанося урон и дезориентируя",
+        "damage": 10,
+        "confusion_duration": 3,
+        "cooldown": 15
+      },
+      "void_step": {
+        "description": "Телепортируется на короткое расстояние, избегая атак",
+        "cooldown": 10
+      }
+    }
+  },
+
+  "wood_sprite": {
+    "name": "Лесной дух",
+    "description": "Маленькое существо, состоящее из веток, листьев и кристальной энергии. Обычно дружелюбны к путникам, но становятся агрессивны, если нарушать покой леса.",
+    "level": 3,
+    "health": 25,
+    "damage": 5,
+    "armor": 1,
+    "magic_resist": 5,
+    "is_elite": false,
+    "weaknesses": ["fire", "cold"],
+    "resistances": ["nature", "lightning"],
+    "drops": {
+      "luminous_bark": {
+        "chance": 0.6,
+        "min": 1,
+        "max": 2
+      },
+      "whispering_flower": {
+        "chance": 0.4,
+        "min": 1,
+        "max": 2
+      }
+    },
+    "abilities": {
+      "root_snare": {
+        "description": "Обвивает ноги цели корнями, замедляя движение",
+        "slow_factor": 0.5,
+        "duration": 4,
+        "cooldown": 12
+      },
+      "healing_pollen": {
+        "description": "Испускает целебную пыльцу, восстанавливающую здоровье",
+        "heal_amount": 10,
+        "cooldown": 20
+      }
+    }
+  },
+
+  "crystal_fox": {
+    "name": "Кристальная лисица",
+    "description": "Лисица с кристаллическими наростами на шкуре, придающими ей необычный блеск. Эти существа обладают повышенным интеллектом и природной хитростью.",
+    "level": 4,
+    "health": 30,
+    "damage": 7,
+    "armor": 2,
+    "magic_resist": 8,
+    "is_elite": false,
+    "weaknesses": ["physical"],
+    "resistances": ["mind", "magic"],
+    "drops": {
+      "fox_fur": {
+        "chance": 0.7,
+        "min": 1,
+        "max": 1
+      },
+      "minor_mind_shard": {
+        "chance": 0.2,
+        "min": 1,
+        "max": 1
+      }
+    },
+    "abilities": {
+      "mind_trick": {
+        "description": "Создает иллюзорные копии себя, сбивая цель с толку",
+        "illusion_count": 2,
+        "duration": 5,
+        "cooldown": 25
+      },
+      "quick_dash": {
+        "description": "Быстро перемещается, избегая вражеских атак",
+        "cooldown": 8
+      }
+    }
+  },
+
+  "water_elemental": {
+    "name": "Водный элементаль",
+    "description": "Существо, состоящее из воды, пронизанной кристальной энергией. Обитает в Кристальном озере и защищает его от загрязнения.",
+    "level": 7,
+    "health": 70,
+    "damage": 10,
+    "armor": 3,
+    "magic_resist": 15,
+    "is_elite": true,
+    "weaknesses": ["lightning", "cold"],
+    "resistances": ["fire", "physical"],
+    "drops": {
+      "water_essence": {
+        "chance": 0.8,
+        "min": 2,
+        "max": 4
+      },
+      "water_shard": {
+        "chance": 0.3,
+        "min": 1,
+        "max": 1
+      }
+    },
+    "abilities": {
+      "water_jet": {
+        "description": "Мощная струя воды, отбрасывающая цель назад",
+        "damage": 8,
+        "knockback_distance": 5,
+        "cooldown": 12
+      },
+      "healing_waters": {
+        "description": "Восстанавливает здоровье элементаля",
+        "heal_amount": 20,
+        "cooldown": 30
+      },
+      "whirlpool": {
+        "description": "Создает водоворот, затягивающий цели и наносящий урон",
+        "damage_per_second": 3,
+        "duration": 5,
+        "cooldown": 20
+      }
+    }
+  },
+
+  "crystal_crab": {
+    "name": "Кристальный краб",
+    "description": "Краб с панцирем, инкрустированным кристаллами. Мирное существо, но при угрозе способно постоять за себя.",
+    "level": 2,
+    "health": 20,
+    "damage": 4,
+    "armor": 8,
+    "magic_resist": 3,
+    "is_elite": false,
+    "weaknesses": ["lightning"],
+    "resistances": ["physical", "water"],
+    "drops": {
+      "crab_meat": {
+        "chance": 0.6,
+        "min": 1,
+        "max": 2
+      },
+      "crystal_fragment": {
+        "chance": 0.4,
+        "min": 1,
+        "max": 3
+      }
+    },
+    "abilities": {
+      "hard_shell": {
+        "description": "При низком здоровье увеличивает защиту на короткое время",
+        "armor_boost": 10,
+        "duration": 5,
+        "trigger": "health_below_30_percent"
+      },
+      "pincer_attack": {
+        "description": "Атака клешнями с шансом обездвижить цель",
+        "stun_chance": 0.2,
+        "stun_duration": 2,
+        "cooldown": 8
+      }
+    }
+  }
+}

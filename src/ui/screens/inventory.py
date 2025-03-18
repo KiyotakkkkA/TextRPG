@@ -10,9 +10,14 @@ def format_resource_name(self, resource_id):
     
 def show_inventory(self):
     from src.ui.GameMenu import BOX_CHARS, ICONS
+    from src.ui.screens.equipment import show_equipment
     """Показывает инвентарь игрока и позволяет взаимодействовать с предметами"""
     self.clear_screen()
     self.draw_box(80, "ИНВЕНТАРЬ")
+    
+    # Обновлена информация о переходе к экипировке
+    print(f"{Fore.CYAN}┃ [E] Перейти к экрану экипировки{Style.RESET_ALL}")
+    print(f"{Fore.CYAN}┃")
     
     # Добавляем статистику персонажа
     print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {ICONS['player']} {self.highlight_color}Статистика персонажа:{Style.RESET_ALL}")
@@ -91,8 +96,20 @@ def show_inventory(self):
         type_part = f"[{Fore.CYAN}{item.get_type():<{max_type_length}}{Style.RESET_ALL}]"
         rarity_part = f"{rarity_icon} {rarity_color}{rarity_name}{Style.RESET_ALL}"
         
-        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {name_part} {count_part} {type_part} - {rarity_part}")
+        print(f"{self.title_color}{BOX_CHARS['v_line']}{Style.RESET_ALL} {name_part} {count_part} {type_part} {rarity_part}")
     
+    # Завершаем отображение инвентаря
     self.draw_bottom_box(80)
-    print(f"{self.title_color}Нажмите любую клавишу для продолжения...{Style.RESET_ALL}")
-    self.get_key()
+    
+    # Добавляем подсказку внизу экрана
+    self.print_footer("↑↓: Выбор, Enter: Использовать, E: Экипировка, Esc: Вернуться в игру")
+    
+    # Ожидаем действия пользователя
+    key = self.get_key()
+    
+    if key == "ESC":
+        # Возвращаемся в игру (look_around)
+        self.look_around()
+    elif key == "e" or key == "е":  # е - русская e
+        # Переходим на экран экипировки
+        show_equipment(self)

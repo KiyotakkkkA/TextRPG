@@ -1,0 +1,16 @@
+{
+  "id": "trading",
+  "name": "Торговля",
+  "description": "Торговля предметами и ресурсами",
+  "max_level": 100,
+  "base_exp": 100,
+  "exp_factor": 1.4,
+  "levels": [
+    {
+      "level": 1,
+      "provides": {
+        "trade_boost": 0
+      }
+    }
+  ]
+}
