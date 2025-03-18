@@ -1,0 +1,7 @@
+{
+  "test_material": {
+    "name": "Тестовый материал",
+    "description": "Тестовый материал",
+    "type": "material"
+  }
+}
