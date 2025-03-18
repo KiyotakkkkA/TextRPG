@@ -1,7 +1,22 @@
 {
-  "test_material": {
-    "name": "Тестовый материал",
-    "description": "Тестовый материал",
+  "mushroom": {
+    "name": "Гриб",
+    "description": "Гриб",
+    "type": "material"
+  },
+  "beast_flower": {
+    "name": "Звероцвет",
+    "description": "Звероцвет",
+    "type": "material"
+  },
+  "stone": {
+    "name": "Камень",
+    "description": "Камень",
+    "type": "material"
+  },
+  "tree_bark": {
+    "name": "Древесная кора",
+    "description": "Древесная кора",
     "type": "material"
   }
 }

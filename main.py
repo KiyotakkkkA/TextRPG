@@ -1,12 +1,79 @@
+"""
+Главный файл игры TextRPG Adventure.
+Инициализирует движок рендеринга и игровую систему.
+"""
+
 from src.GameSystem import GameSystem
+from src.render.core import Engine
+from src.render.screens import MainMenuScreen, GameScreen
+from src.utils.PropertiesLoader import get_version_properties
 
 def main():
-    game = GameSystem()
-    game.preload()
+    """
+    Точка входа в игру.
+    Инициализирует игровую систему и движок рендеринга, запускает игру.
+    """
+    # Загружаем информацию о версии
+    version_props = get_version_properties()
+    game_version = version_props.get("game.version", "0.1.0")
+    game_stage = version_props.get("game.stage", "Alpha")
+    engine_version = version_props.get("engine.version", "1.0.0")
+    engine_name = version_props.get("engine.name", "TextRPG Engine")
     
-    game.player.add_item_by_id("test_food", 10)
-    game.player.take_item_by_id("test_food", 5)
-    print(game.player.get_item_by_id("test_food"))
+    # Выводим информацию о запуске
+    print(f"\nЗапуск TextRPG Adventure v{game_version} {game_stage}")
+    print(f"Powered by {engine_name} v{engine_version}")
+    print("=" * 60)
+    
+    # Инициализация игровой системы
+    game_system = GameSystem()
+    game_system.preload()
+    
+    # Инициализация движка рендеринга
+    engine = Engine()
+    
+    # Настраиваем параметры для уменьшения мерцания
+    engine.fps_limit = 10  # Уменьшаем частоту обновления экрана
+    engine.update_rate = 20  # Уменьшаем частоту обновления логики
+    engine.auto_render = False  # Отключаем автоматический рендеринг
+    engine.render_on_update = False  # Рендерим только при необходимости
+    
+    # Создание и регистрация экранов
+    main_menu = MainMenuScreen(engine, "TextRPG Adventure")
+    game_screen = GameScreen(engine)
+    
+    # Модификация обработчиков меню, чтобы они работали с игровой системой
+    def on_new_game():
+        # Запуск новой игры
+        print("Запуск новой игры...")
+        engine.set_current_screen("game")
+    
+    def on_load_game():
+        # Загрузка сохраненной игры
+        print("Загрузка игры...")
+        # Здесь будет код загрузки
+        engine.set_current_screen("game")
+    
+    # Назначаем новые обработчики
+    main_menu.on_new_game = on_new_game
+    main_menu.on_load_game = on_load_game
+    
+    # Регистрация экранов
+    engine.register_screen("main_menu", main_menu)
+    engine.register_screen("game", game_screen)
+    
+    # Устанавливаем начальный экран
+    engine.set_current_screen("main_menu")
+    
+    # Запуск движка
+    try:
+        engine.start()
+    except KeyboardInterrupt:
+        print("\nПрерывание работы пользователем.")
+    except Exception as e:
+        print(f"\nОшибка: {str(e)}")
+    finally:
+        print("\nЗавершение работы игры.")
 
 if __name__ == "__main__":
     main()
