@@ -9,7 +9,8 @@ from src.render.core import (
 )
 from src.render.ui import (
     Panel, Label, Button, MenuItem, Menu, 
-    ProgressBar, TextBox, DialogBox
+    ProgressBar, TextBox, DialogBox,
+    FlexPanel, RichText, SidebarLayout
 )
 from src.render.screens import (
     MainMenuScreen, GameScreen
@@ -24,6 +25,7 @@ __all__ = [
     # UI компоненты
     'Panel', 'Label', 'Button', 'MenuItem', 'Menu', 
     'ProgressBar', 'TextBox', 'DialogBox',
+    'FlexPanel', 'RichText', 'SidebarLayout',
     
     # Экраны
     'MainMenuScreen', 'GameScreen'

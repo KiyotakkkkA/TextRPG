@@ -42,14 +42,32 @@ def main():
     main_menu = MainMenuScreen(engine, "TextRPG Adventure")
     game_screen = GameScreen(engine)
     
+    # Устанавливаем ссылку на игровую систему в игровой экран
+    game_screen.set_game_system(game_system)
+    
     # Модификация обработчиков меню, чтобы они работали с игровой системой
     def on_new_game():
-        # Запуск новой игры
+        """
+        Запуск новой игры.
+        """
         print("Запуск новой игры...")
+        # Проверяем и получаем начальную локацию
+        initial_location = game_system.get_location("forest")
+        if initial_location is None:
+            print("Начальная локация не найдена, проверьте файлы локаций!")
+            return  # Прерываем запуск игры, если нет локации
+        
+        # Переходим в начальную локацию
+        game_system.change_location("forest")
+        
+        # Переходим на игровой экран
         engine.set_current_screen("game")
+        print(f"Вы начинаете в локации: {initial_location.name}")
     
     def on_load_game():
-        # Загрузка сохраненной игры
+        """
+        Загрузка сохраненной игры.
+        """
         print("Загрузка игры...")
         # Здесь будет код загрузки
         engine.set_current_screen("game")

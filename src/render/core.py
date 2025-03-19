@@ -32,6 +32,7 @@ class Keys:
 # Константы для цветов
 class Color:
     BLACK = '\033[30m'
+    LIGHT_GRAY = '\033[90m'
     RED = '\033[31m'
     GREEN = '\033[32m'
     YELLOW = '\033[33m'

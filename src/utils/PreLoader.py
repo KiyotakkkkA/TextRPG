@@ -1,4 +1,5 @@
 from src.loaders.ItemsLoader import ItemsLoader
+from src.loaders.LocationsLoader import LocationsLoader
 from src.loaders.SimpleLoader import SimpleLoader
 from src.utils.Logger import Logger
 
@@ -8,6 +9,7 @@ class PreLoader:
         self.loaders = []
         self.ATLAS = {
             "ITEMS": ItemsLoader(),
+            "LOCATIONS": LocationsLoader(),
         }
         
         # Автоматически регистрируем все загрузчики из ATLAS
