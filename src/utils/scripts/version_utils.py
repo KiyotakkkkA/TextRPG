@@ -96,6 +96,28 @@ def update_engine_version(increment_type='patch'):
     
     return new_version
 
+def update_pymust_version(increment_type='patch'):
+    """
+    Обновляет версию pymust в файле свойств.
+    
+    Args:
+        increment_type (str): Тип инкремента ('major', 'minor', 'patch')
+        
+    Returns:
+        str: Новая версия pymust
+    """
+    props = get_version_properties()
+    current_version = props.get('pymust.version', '0.1.0')
+    new_version = increment_version(current_version, increment_type)
+    
+    # Обновляем версию в свойствах
+    props.set('pymust.version', new_version)
+    
+    # Сохраняем изменения
+    props.save()
+    
+    return new_version
+
 def set_game_stage(stage):
     """
     Устанавливает стадию разработки игры.
@@ -124,6 +146,7 @@ def get_full_version_info():
     engine_version = props.get('engine.version', '1.0.0')
     engine_name = props.get('engine.name', 'TextRPG Engine')
     build = props.get('game.build', 'unknown')
+    pymust_version = props.get('pymust.version', '0.1.0')
     
     return {
         'game': {
@@ -136,6 +159,10 @@ def get_full_version_info():
             'version': engine_version,
             'name': engine_name,
             'full': f"{engine_name} v{engine_version}"
+        },
+        'pymust': {
+            'version': pymust_version,
+            'full': f"pymust v{pymust_version}"
         }
     }
 
@@ -143,4 +170,5 @@ def get_full_version_info():
 if __name__ == "__main__":
     info = get_full_version_info()
     print(f"Версия игры: {info['game']['full']}")
-    print(f"Версия движка: {info['engine']['full']}") 
+    print(f"Версия движка: {info['engine']['full']}")
+    print(f"Версия pymust: {info['pymust']['full']}") 

@@ -3,6 +3,25 @@
 Инициализирует движок рендеринга и игровую систему.
 """
 
+import os
+import sys
+import importlib.util
+from pathlib import Path
+
+# Импортируем и запускаем компилятор ресурсов
+scripts_dir = Path(__file__).parent / "scripts"
+sys.path.append(str(scripts_dir))
+
+compile_resources_spec = importlib.util.spec_from_file_location(
+    "compile_resources", 
+    scripts_dir / "compile_resources.py"
+)
+compile_resources_module = importlib.util.module_from_spec(compile_resources_spec)
+compile_resources_spec.loader.exec_module(compile_resources_module)
+compiled, total = compile_resources_module.compile_resources()
+if compiled > 0:
+    print(f"Скомпилировано {compiled} из {total} .desc файлов")
+
 from src.GameSystem import GameSystem
 from src.render.core import Engine
 from src.render.screens import MainMenuScreen, GameScreen

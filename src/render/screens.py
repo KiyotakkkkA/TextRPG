@@ -44,6 +44,7 @@ class MainMenuScreen(Screen):
         game_stage = self.version_props.get("game.stage", "Alpha")
         engine_version = self.version_props.get("engine.version", "1.0.0")
         engine_name = self.version_props.get("engine.name", "TextRPG Engine")
+        pymust_version = self.version_props.get("pymust.version", "0.1.0")
         
         version_text = f"v{game_version} {game_stage}"
         version_label = Label(0, title_y + 1, "", Color.BRIGHT_BLACK)
@@ -55,6 +56,12 @@ class MainMenuScreen(Screen):
         engine_label = Label(0, title_y + 2, "", Color.BRIGHT_BLACK)
         engine_label.set_text(ConsoleHelper.center_text(engine_text, width))
         self.add_child(engine_label)
+        
+        # Информация о скриптере (опционально)
+        pymust_text = f"Scripted by Pymust v{pymust_version}"
+        pymust_label = Label(0, title_y + 3, "", Color.BRIGHT_BLACK)
+        pymust_label.set_text(ConsoleHelper.center_text(pymust_text, width))
+        self.add_child(pymust_label)
         
         # Создаем элементы меню
         menu_items = [
@@ -68,7 +75,7 @@ class MainMenuScreen(Screen):
         # Создаем меню
         menu_width = 30
         menu_x = (width - menu_width) // 2
-        menu_y = title_y + 4  # Увеличиваем отступ для добавленной информации о движке
+        menu_y = title_y + 5  # Увеличиваем отступ для добавленной информации о движке
         
         self.menu = Menu(
             menu_x, menu_y, menu_width, menu_items,

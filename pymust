@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+"""
+TextRPG pymust - менеджер команд для игры TextRPG.
+Это аналог artisan для Laravel, но для Python и TextRPG.
+
+Использование:
+    python pymust <команда> [аргументы]
+    
+Пример:
+    python pymust compile --force
+    python pymust desc2json input.desc output.json
+    python pymust run
+"""
+
+import sys
+import os
+from pathlib import Path
+
+# Добавляем директорию скриптов в sys.path
+current_dir = Path(__file__).parent
+scripts_dir = current_dir / "scripts"
+sys.path.append(str(scripts_dir))
+
+# Импортируем библиотеку pymustlib
+try:
+    from scripts.pymustlib import show_help, run_command
+except ImportError:
+    print("Ошибка: не удалось импортировать библиотеку pymustlib.")
+    print("Убедитесь, что скрипт запущен из корневой директории проекта.")
+    sys.exit(1)
+
+def main():
+    """Основная функция скрипта pymust"""
+    # Проверяем, что есть аргументы командной строки
+    if len(sys.argv) < 2:
+        show_help()
+        return 0
+    
+    # Первый аргумент - имя команды
+    command_name = sys.argv[1]
+    
+    # Если запрашивается справка о pymust
+    if command_name in ["-h", "--help", "help"]:
+        show_help()
+        return 0
+    
+    # Запускаем команду с оставшимися аргументами
+    return run_command(command_name, sys.argv[2:])
+
+if __name__ == "__main__":
+    sys.exit(main()) 

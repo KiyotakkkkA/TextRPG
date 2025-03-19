@@ -33,38 +33,41 @@
     "connections": [
       {
         "id": "mountains",
-        "name": "Горы",
+        "name": "горы",
         "condition": null
       },
       {
         "id": "meadow",
-        "name": "Цветущий Луг",
+        "name": "цветущий луг",
         "condition": null
       },
       {
         "id": "village",
-        "name": "Деревня",
+        "name": "деревня",
         "condition": null
       }
     ],
     "characters": [
       {
         "id": "hermit",
-        "name": "Отшельник Эрмин",
-        "description": "Старый отшельник, живущий в лесу. Знает множество лесных тайн."
+        "name": "отшельник эрмин",
+        "description": "старый отшельник живущий в лесу. знает множество лесных тайн."
       },
       {
         "id": "herbalist",
-        "name": "Травник Миран",
-        "description": "Собиратель трав. Может научить искусству сбора лекарственных растений."
+        "name": "травник миран",
+        "description": "собиратель трав. может научить искусству сбора лекарственных растений."
       }
     ],
     "properties": {
       "danger_level": 1,
-      "weather": ["sunny", "rainy", "foggy"]
+      "weather": [
+        "sunny",
+        "rainy",
+        "foggy"
+      ]
     }
   },
-
   "mountains": {
     "name": "Горы",
     "description": "Высокие скалистые горы с крутыми склонами и скрытыми пещерами. Здесь можно найти редкие минералы и руды.",
@@ -99,28 +102,31 @@
     "connections": [
       {
         "id": "forest",
-        "name": "Лес",
+        "name": "лес",
         "condition": null
       },
       {
         "id": "cave",
-        "name": "Пещера",
+        "name": "пещера",
         "condition": "has_torch"
       }
     ],
     "characters": [
       {
         "id": "miner",
-        "name": "Шахтёр Горан",
-        "description": "Опытный шахтер, который знает все о добыче руды и минералов."
+        "name": "шахтёр горан",
+        "description": "опытный шахтер который знает все о добыче руды и минералов."
       }
     ],
     "properties": {
       "danger_level": 2,
-      "weather": ["sunny", "windy", "snowy"]
+      "weather": [
+        "sunny",
+        "windy",
+        "snowy"
+      ]
     }
   },
-
   "meadow": {
     "name": "Цветущий Луг",
     "description": "Прекрасный луг, покрытый яркими цветами и высокой травой. Идеальное место для сбора редких цветов и трав.",
@@ -155,29 +161,31 @@
     "connections": [
       {
         "id": "forest",
-        "name": "Лес",
+        "name": "лес",
         "condition": null
       },
       {
         "id": "river",
-        "name": "Река",
+        "name": "река",
         "condition": null
       }
     ],
     "characters": [
       {
         "id": "beekeeper",
-        "name": "Пчеловод Медий",
-        "description": "Заботится о диких пчелах и знает все о меде и его свойствах."
+        "name": "пчеловод медий",
+        "description": "заботится о диких пчелах и знает все о меде и его свойствах."
       }
     ],
     "properties": {
       "danger_level": 1,
       "ambient_sound": "meadow_buzz.mp3",
-      "weather": ["sunny", "light_rain"]
+      "weather": [
+        "sunny",
+        "light_rain"
+      ]
     }
   },
-
   "village": {
     "name": "Деревня",
     "description": "Небольшая деревня с дружелюбными жителями. Здесь можно торговать, получать задания и отдыхать.",
@@ -200,35 +208,35 @@
     "connections": [
       {
         "id": "forest",
-        "name": "Лес",
+        "name": "лес",
         "condition": null
       },
       {
         "id": "river",
-        "name": "Река",
+        "name": "река",
         "condition": null
       },
       {
         "id": "town",
-        "name": "Город",
+        "name": "город",
         "condition": "completed_quest_1"
       }
     ],
     "characters": [
       {
         "id": "elder",
-        "name": "Староста Миротвор",
-        "description": "Глава деревни, который заботится о благополучии всех жителей."
+        "name": "староста миротвор",
+        "description": "глава деревни который заботится о благополучии всех жителей."
       },
       {
         "id": "merchant",
-        "name": "Торговец Купец",
-        "description": "Купит у вас ресурсы и продаст полезные предметы."
+        "name": "торговец купец",
+        "description": "купит у вас ресурсы и продаст полезные предметы."
       },
       {
         "id": "blacksmith",
-        "name": "Кузнец Молот",
-        "description": "Мастер ковки, создает лучшее оружие и инструменты."
+        "name": "кузнец молот",
+        "description": "мастер ковки"
       }
     ],
     "properties": {
@@ -237,7 +245,6 @@
       "rest_available": true
     }
   },
-
   "river": {
     "name": "Река",
     "description": "Широкая река с чистой проточной водой. Хорошее место для рыбалки и сбора водных ресурсов.",
@@ -272,25 +279,25 @@
     "connections": [
       {
         "id": "meadow",
-        "name": "Цветущий Луг",
+        "name": "цветущий луг",
         "condition": null
       },
       {
         "id": "village",
-        "name": "Деревня",
+        "name": "деревня",
         "condition": null
       },
       {
         "id": "waterfall",
-        "name": "Водопад",
+        "name": "водопад",
         "condition": null
       }
     ],
     "characters": [
       {
         "id": "fisherman",
-        "name": "Рыбак Серый",
-        "description": "Старый рыбак с многолетним опытом ловли рыбы во всех водоемах."
+        "name": "рыбак серый",
+        "description": "старый рыбак с многолетним опытом ловли рыбы во всех водоемах."
       }
     ],
     "properties": {
@@ -298,7 +305,6 @@
       "swimming_required": false
     }
   },
-
   "cave": {
     "name": "Пещера",
     "description": "Тёмная пещера, уходящая глубоко под землю. Здесь можно найти редкие минералы и древние артефакты.",
@@ -333,26 +339,30 @@
     "connections": [
       {
         "id": "mountains",
-        "name": "Горы",
+        "name": "горы",
         "condition": null
       },
       {
         "id": "underground_lake",
-        "name": "Подземное Озеро",
+        "name": "подземное озеро",
         "condition": "has_map"
       }
     ],
     "characters": [
       {
         "id": "ghost",
-        "name": "Призрак Древнего Шахтёра",
-        "description": "Таинственный призрак, который обитает в пещере уже много веков."
+        "name": "призрак древнего шахтёра",
+        "description": "таинственный призрак который обитает в пещере уже много веков."
       }
     ],
     "properties": {
       "danger_level": 3,
       "light_required": true,
-      "enemies": ["bat", "spider", "troll"]
+      "enemies": [
+        "bat",
+        "spider",
+        "troll"
+      ]
     }
   }
 }
