@@ -28,6 +28,23 @@ class Keys:
     SPACE = 32
     TAB = 9
     BACKSPACE = 8
+    
+    @staticmethod
+    def from_char(char: str) -> int:
+        """
+        Преобразует символ в код клавиши.
+        
+        Args:
+            char: Символ (одна буква)
+            
+        Returns:
+            int: Код клавиши
+        """
+        if not char or len(char) != 1:
+            return 0
+        
+        # Преобразуем символ в нижний регистр и получаем его ASCII-код
+        return ord(char.lower())
 
 # Константы для цветов
 class Color:

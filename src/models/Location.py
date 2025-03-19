@@ -4,6 +4,9 @@
 """
 
 import random
+import time
+import json
+import copy  # Добавляю импорт модуля copy для глубокого копирования
 from typing import Dict, List, Any, Optional
 
 class Location:
@@ -49,11 +52,16 @@ class Location:
         """
         Спавнит ресурсы на локации в случайном количестве согласно настройкам.
         """
+        # Создаем новый пустой словарь для ресурсов
         self.available_resources = {}
         
+        # Создаем глубокие копии данных о ресурсах для каждой локации
+        # Это предотвратит проблему с удалением ресурсов со всех локаций при сборе на одной локации
         for resource_id, resource_data in self._resources_data.items():
-            min_amount = resource_data.get("min_amount", 0)
-            max_amount = resource_data.get("max_amount", 0)
+            # Создаем глубокую копию данных о ресурсе
+            resource_copy = copy.deepcopy(resource_data)
+            min_amount = resource_copy.get("min_amount", 0)
+            max_amount = resource_copy.get("max_amount", 0)
             
             # Если max_amount == 0, то ресурс не спавнится
             if max_amount > 0:
@@ -101,9 +109,10 @@ class Location:
         # Уменьшаем доступное количество
         self.available_resources[resource_id] -= to_collect
         
-        # Если ресурсы закончились, удаляем их из списка
-        if self.available_resources[resource_id] <= 0:
-            del self.available_resources[resource_id]
+        # Оставляем ресурс в списке даже если его количество равно 0
+        # Это позволяет отображать его в интерфейсе и проверять время респауна
+        # Ресурс с количеством 0 все равно не может быть собран (проверка выше)
+        # Удалять ресурс будем только при инициализации новых ресурсов методом _spawn_resources
         
         return to_collect
     

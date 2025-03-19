@@ -1,0 +1,95 @@
+LOCATION forest {
+    name: "Лес"
+    description: "Густой лес с множеством растений и животных. Здесь можно найти различные лекарственные травы и редкие ингредиенты."
+    type: wilderness
+    color: green
+    RESOURCES {
+        RESOURCE luhomir {
+            min_amount: 2
+            max_amount: 4
+            respawn_time: 120
+            required_tool: null
+        }
+        RESOURCE wolf_bane {
+            min_amount: 1
+            max_amount: 3
+            respawn_time: 180
+            required_tool: null
+        }
+        RESOURCE air_essence {
+            min_amount: 1
+            max_amount: 2
+            respawn_time: 300
+            required_tool: null
+        }
+        RESOURCE hypericum {
+            min_amount: 0
+            max_amount: 1
+            respawn_time: 240
+            required_tool: null
+        }
+        RESOURCE lom {
+            min_amount: 0
+            max_amount: 1
+            respawn_time: 240
+            required_tool: null
+        }
+    }
+    CONNECTIONS {
+        CONNECTION river_path {
+            id: "river"
+            name: "Река"
+            condition: null
+        }
+        CONNECTION desert_path {
+            id: "desert"
+            name: "Пустыня"
+            condition: null
+        }
+    }
+}
+
+LOCATION river {
+    name: "Река"
+    description: "Глубокая река с чистой водой. Вдоль берега растут ивы и камыши. Хорошее место для рыбалки."
+    type: wilderness
+    color: blue
+    RESOURCES {
+        RESOURCE luhomir {
+            min_amount: 2
+            max_amount: 4
+            respawn_time: 120
+            required_tool: null
+        }
+    }
+    CONNECTIONS {
+        CONNECTION forest_path {
+            id: "forest"
+            name: "Лес"
+            condition: null
+        }
+    }
+}
+
+LOCATION desert {
+    name: "Пустыня"
+    description: "Жаркая и сухая пустыня с множеством растений и животных."
+    type: wilderness
+    color: yellow
+    RESOURCES {
+        RESOURCE luhomir {
+            min_amount: 2
+            max_amount: 4
+            respawn_time: 120
+            required_tool: null
+        }
+    }
+    CONNECTIONS {
+        CONNECTION forest_path {
+            id: "forest"
+            name: "Лес"
+            condition: null
+            icon: "🌲"
+        }
+    }
+}

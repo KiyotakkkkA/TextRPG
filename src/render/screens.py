@@ -65,11 +65,11 @@ class MainMenuScreen(Screen):
         
         # Создаем элементы меню
         menu_items = [
-            MenuItem("Новая игра", self.on_new_game),
-            MenuItem("Загрузить игру", self.on_load_game),
-            MenuItem("Настройки", self.on_settings),
-            MenuItem("Об игре", self.on_about),
-            MenuItem("Выход", self.on_exit)
+            MenuItem("Новая игра", self.on_new_game, key=ord('N')),
+            MenuItem("Загрузить игру", self.on_load_game, key=ord('L')),
+            MenuItem("Настройки", self.on_settings, key=ord('S')),
+            MenuItem("Об игре", self.on_about, key=ord('A')),
+            MenuItem("Выход", self.on_exit, key=ord('Q'))
         ]
         
         # Создаем меню
@@ -243,6 +243,7 @@ class GameScreen(Screen):
         
         # Создаем вкладки для основного контента
         self.tabs = ["Описание", "Персонажи", "Карта"]
+        self.tab_keys = [49, 50, 51]  # Коды клавиш '1', '2', '3' для быстрого доступа
         self.current_tab = 0
         
         # Рисуем вкладки
@@ -253,7 +254,8 @@ class GameScreen(Screen):
             tab_bg = Color.BG_BLUE if i == self.current_tab else ""
             tab_x = sidebar_width + 1 + (i * tab_width)
             # Смещаем метку вкладки на 1 вниз, чтобы она не перекрывала верхнюю панель
-            tab_label = Label(tab_x + 2, top_panel_height + 1, tab, tab_color, tab_bg)
+            # Добавляем номер вкладки для горячего доступа
+            tab_label = Label(tab_x + 2, top_panel_height + 1, f"{i+1}. {tab}", tab_color, tab_bg)
             self.tab_labels.append(tab_label)
             self.add_child(tab_label)
         
@@ -532,9 +534,16 @@ class GameScreen(Screen):
         if location.connections:
             self.description_text.add_text("\n\nНаправления:", Color.YELLOW)
             for conn in location.connections:
-                conn_name = conn.get("name", "Неизвестно")
-                icon = conn.get("icon", "🧭")
-                condition = conn.get("condition", None)
+                # Проверяем, является ли соединение словарем или строкой
+                if isinstance(conn, dict):
+                    conn_name = conn.get("name", "Неизвестно")
+                    icon = conn.get("icon", "🧭")
+                    condition = conn.get("condition", None)
+                else:
+                    # Если это строка или другой тип, используем значение как есть
+                    conn_name = str(conn)
+                    icon = "🧭"
+                    condition = None
                 
                 # Проверяем доступность направления по условию
                 if condition:
@@ -554,8 +563,14 @@ class GameScreen(Screen):
             self.characters_text.add_text("", Color.WHITE)  # Пустая строка
             
             for character in location.characters:
-                char_name = character.get("name", "Неизвестно")
-                char_desc = character.get("description", "")
+                # Проверяем, является ли персонаж словарем или строкой
+                if isinstance(character, dict):
+                    char_name = character.get("name", "Неизвестно")
+                    char_desc = character.get("description", "")
+                else:
+                    # Если это строка или другой тип, используем значение как есть
+                    char_name = str(character)
+                    char_desc = ""
                 
                 self.characters_text.add_text(f"👤 {char_name}", Color.BRIGHT_WHITE)
                 self.characters_text.add_text(f"   {char_desc}", Color.WHITE)
@@ -572,7 +587,13 @@ class GameScreen(Screen):
         # Подсчитываем, сколько строк будет занимать текст ресурсов
         resource_lines = 0
         
-        if location.available_resources:
+        if location.available_resources and len(location.available_resources) > 0:
+            # Добавляем заголовок
+            self.resources_text.add_text("", Color.WHITE)  # Пустая строка
+            resource_lines += 2
+            
+            has_available_resources = False
+            
             for resource_id, amount in location.available_resources.items():
                 # Получаем данные ресурса
                 item_data = self.game_system.get_item(resource_id)
@@ -593,14 +614,28 @@ class GameScreen(Screen):
                     elif rarity == "LEGENDARY":
                         resource_color = Color.BRIGHT_YELLOW
                     
-                    self.resources_text.add_text(f"{resource_name}", resource_color, new_line=True)
-                    self.resources_text.add_text(f" × ", Color.WHITE, new_line=False)
-                    self.resources_text.add_text(f"{amount}", Color.BRIGHT_YELLOW, new_line=False)
+                    # Если количество больше нуля, отображаем обычным способом
+                    if amount > 0:
+                        has_available_resources = True
+                        self.resources_text.add_text(f"{resource_name}", resource_color, new_line=True)
+                        self.resources_text.add_text(f" × ", Color.WHITE, new_line=False)
+                        self.resources_text.add_text(f"{amount}", Color.BRIGHT_YELLOW, new_line=False)
+                    else:
+                        # Если количество равно нулю, показываем как "исчерпан"
+                        self.resources_text.add_text(f"{resource_name}", Color.BRIGHT_BLACK, new_line=True)
+                        self.resources_text.add_text(f" - ", Color.WHITE, new_line=False)
+                        self.resources_text.add_text("исчерпан", Color.BRIGHT_BLACK, new_line=False)
                     
                     # Каждый ресурс занимает одну строку
                     resource_lines += 1
+            
+            # Если нет доступных ресурсов вообще, показываем сообщение
+            if not has_available_resources:
+                self.resources_text.clear()
+                self.resources_text.add_text("Нет доступных ресурсов на локации", Color.BRIGHT_BLACK)
+                resource_lines = 1
         else:
-            self.resources_text.add_text("На этой локации нет доступных ресурсов.", Color.BRIGHT_BLACK)
+            self.resources_text.add_text("Нет доступных ресурсов на локации", Color.BRIGHT_BLACK)
             resource_lines = 1
         
         # Обновляем высоту панели ресурсов в зависимости от их количества
@@ -633,82 +668,162 @@ class GameScreen(Screen):
             self.actions_menu.items = []
             return
         
-        action_items = []
+        # Очищаем меню действий
+        items = []
         
-        # Добавляем действия перемещения с более коротким префиксом
-        if location.connections:
-            for conn in location.connections:
-                conn_id = conn.get("id", "unknown")
-                conn_name = conn.get("name", conn_id)
+        # Добавляем действия перемещения в другие локации
+        for connection in location.connections:
+            # Проверяем, является ли соединение словарем или строкой
+            conn_id = ""
+            conn_name = ""
+            if isinstance(connection, dict):
+                conn_id = connection.get("id", "").lower()
+                conn_name = connection.get("name", conn_id)
+            else:
+                conn_id = str(connection).lower()
+                conn_name = conn_id
+            
+            # Создаем функцию для перемещения в указанную локацию
+            def create_move_action(target_id):
+                return lambda: self.on_move_to_location(target_id)
+            
+            # Добавляем пункт меню для перемещения
+            items.append(MenuItem(
+                f"Идти в: {conn_name}",
+                create_move_action(conn_id),
+                text_parts=[
+                    {"text": "Идти в: ", "color": Color.WHITE},
+                    {"text": conn_name, "color": Color.BRIGHT_YELLOW}
+                ]
+            ))
+        
+        # Добавляем разделитель, если есть хотя бы одна локация для перемещения
+        if items:
+            items.append(MenuItem("──────────────", None, enabled=False))
+        
+        # Добавляем действия для сбора ресурсов
+        has_resources = False
+        
+        for resource_id, amount in location.available_resources.items():
+            # Пропускаем ресурсы с количеством 0
+            if amount <= 0:
+                continue
                 
-                # Создаем действие перемещения с коротким префиксом
-                action = lambda loc_id=conn_id: self.on_move_to_location(loc_id)
-                action_items.append(MenuItem(f"Идти: {conn_name}", action, True, "", Color.BRIGHT_BLUE, text_parts=[{
-                    "text": f"Идти в: ",
-                    "color": Color.WHITE,
-                }, {
-                    "text": f"{conn_name}",
-                    "color": Color.BRIGHT_YELLOW,
-                }]))
-        
-        # Добавляем разделитель, если есть ресурсы
-        if location.available_resources:
-            action_items.append(MenuItem("", None, False))
-        
-        # Добавляем действия сбора ресурсов с более коротким префиксом
-        if location.available_resources:
-            for resource_id, amount in location.available_resources.items():
-                # Получаем данные ресурса
-                item_data = self.game_system.get_item(resource_id)
-                if item_data:
-                    resource_name = item_data.get("name", resource_id)
-                    
-                    # Создаем действие сбора ресурса
-                    action = lambda res_id=resource_id: self.on_collect_resource(res_id)
-                    # Укорачиваем префикс для экономии места
-                    action_items.append(MenuItem(f"Добыть: {resource_name}", action, True, "", Color.BRIGHT_GREEN, text_parts=[{
-                        "text": f"Добыть: ",
-                        "color": Color.WHITE,
-                    }, {
-                        "text": f"{resource_name}",
-                        "color": Color.YELLOW,
-                    }]))
-        
-        # Добавляем персонажей для диалогов
-        if location.characters:
-            action_items.append(MenuItem("", None, False))
-            for character in location.characters:
-                char_id = character.get("id", "unknown")
-                char_name = character.get("name", char_id)
+            # Получаем данные ресурса
+            item_data = self.game_system.get_item(resource_id)
+            if item_data:
+                has_resources = True
+                resource_name = item_data.get("name", resource_id)
+                resource_color = Color.GREEN
                 
-                # Создаем действие разговора с коротким префиксом
-                action = lambda c_id=char_id: self.on_talk_to_character(c_id)
-                action_items.append(MenuItem(f"Говорить с: {char_name.split()[0]}", action, True, "", Color.BRIGHT_WHITE, text_parts=[{
-                    "text": f"Говорить с: ",
-                    "color": Color.WHITE,
-                }, {
-                    "text": f"{char_name.split()[0]}",
-                    "color": Color.CYAN,
-                }]))
+                # Определяем цвет в зависимости от редкости
+                rarity = item_data.get("rarity", "COMMON").upper()
+                if rarity == "COMMON":
+                    resource_color = Color.WHITE
+                elif rarity == "UNCOMMON":
+                    resource_color = Color.BRIGHT_GREEN
+                elif rarity == "RARE":
+                    resource_color = Color.BRIGHT_BLUE
+                elif rarity == "EPIC":
+                    resource_color = Color.BRIGHT_MAGENTA
+                elif rarity == "LEGENDARY":
+                    resource_color = Color.BRIGHT_YELLOW
+                
+                # Создаем функцию для сбора ресурса
+                def create_collect_action(res_id):
+                    return lambda: self.on_collect_resource(res_id)
+                
+                # Добавляем пункт меню для сбора ресурса
+                items.append(MenuItem(
+                    f"Добыть: {resource_name}",
+                    create_collect_action(resource_id),
+                    text_parts=[
+                        {"text": "Добыть: ", "color": Color.WHITE},
+                        {"text": resource_name, "color": resource_color}
+                    ]
+                ))
         
-        # Добавляем разделитель и основные действия
-        action_items.append(MenuItem("", None, False))
-        action_items.extend([
-            MenuItem("Навыки", self.on_skills, True),
-            MenuItem("Инвентарь", self.on_inventory, True),
-            MenuItem("Квесты", self.on_quests, True),
-            MenuItem("Глоссарий", self.on_glossary, True)
-        ])
+        # Добавляем разделитель между ресурсами и персонажами, если есть хотя бы один ресурс
+        if has_resources:
+            items.append(MenuItem("──────────────", None, enabled=False))
         
-        # Обновляем меню
-        self.actions_menu.items = action_items
+        # Добавляем действия диалога с персонажами
+        has_characters = False
+        for character in location.characters:
+            has_characters = True
+            
+            # Проверяем формат персонажа (словарь или строка)
+            if isinstance(character, dict):
+                character_id = character.get("id", "unknown")
+                character_name = character.get("name", character_id)
+            else:
+                character_id = str(character)
+                character_name = character_id
+            
+            # Создаем функцию для разговора с персонажем
+            def create_talk_action(char_id):
+                return lambda: self.on_talk_to_character(char_id)
+            
+            # Добавляем пункт меню для разговора
+            items.append(MenuItem(
+                f"Говорить с: {character_name}",
+                create_talk_action(character_id),
+                text_parts=[
+                    {"text": "Говорить с: ", "color": Color.WHITE},
+                    {"text": character_name, "color": Color.BRIGHT_CYAN}
+                ]
+            ))
+        
+        # Добавляем разделитель между персонажами и стандартными действиями, если есть хотя бы один персонаж
+        if has_characters:
+            items.append(MenuItem("──────────────", None, enabled=False))
+        
+        # Добавляем стандартные действия
+        items.append(MenuItem(
+            "Навыки",
+            self.on_skills,
+            key=Keys.from_char('k'),
+            text_parts=[
+                {"text": "Навыки", "color": Color.WHITE},
+            ]
+        ))
+        
+        items.append(MenuItem(
+            "Инвентарь",
+            self.on_inventory,
+            key=Keys.from_char('i'),
+            text_parts=[
+                {"text": "Инвентарь", "color": Color.WHITE},
+            ]
+        ))
+        
+        items.append(MenuItem(
+            "Квесты",
+            self.on_quests,
+            key=Keys.from_char('j'),
+            text_parts=[
+                {"text": "Квесты", "color": Color.WHITE},
+            ]
+        ))
+        
+        items.append(MenuItem(
+            "Глоссарий",
+            self.on_glossary,
+            key=Keys.from_char('g'),
+            text_parts=[
+                {"text": "Глоссарий", "color": Color.WHITE},
+            ]
+        ))
+        
+        # Обновляем меню действий
+        self.actions_menu.items = items
         
         # Рассчитываем необходимую высоту для меню действий
         # Учитываем, что каждый пункт занимает одну строку, а разделители тоже занимают по строке
-        action_lines = len(action_items)
+        action_lines = len(items)
         
         # Добавляем дополнительные строки для многострочных элементов меню
-        for item in action_items:
+        for item in items:
             if item.text and len(item.text) > (self.actions_menu.width - 4):
                 # Примерно оцениваем количество дополнительных строк для длинного текста
                 text_width = self.actions_menu.width - 4
@@ -804,6 +919,23 @@ class GameScreen(Screen):
         Обрабатывает ввод с клавиатуры.
         Возвращает True, если ввод был обработан и требуется перерисовка.
         """
+        # Проверяем горячие клавиши для вкладок
+        if key in self.tab_keys:
+            tab_index = self.tab_keys.index(key)
+            self.switch_tab(tab_index, True)  # True - указывает, что это прямой переход на вкладку
+            return True
+            
+        # Проверяем регистронезависимые номера клавиш
+        # Для случая, когда указаны клавиши 1, 2, 3, но нажаты клавиши с Shift: !, @, #
+        # ASCII коды: 1=49, !=33 | 2=50, @=64 | 3=51, #=35
+        if key in [33, 64, 35]:  # Символы !, @, #
+            shift_key_mapping = {33: 49, 64: 50, 35: 51}  # Маппинг символов с Shift к обычным цифрам
+            normalized_key = shift_key_mapping[key]
+            if normalized_key in self.tab_keys:
+                tab_index = self.tab_keys.index(normalized_key)
+                self.switch_tab(tab_index, True)
+                return True
+            
         # Переключение вкладок по Tab
         if key == Keys.TAB:
             self.switch_tab()

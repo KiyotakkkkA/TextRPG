@@ -1,31 +1,32 @@
 """
-Загрузчик локаций из JSON-файлов.
+Загрузчик локаций из .desc файлов.
 """
 
-import json
 import os
 import time
 from typing import Dict, List, Any, Optional
 from src.loaders.SimpleLoader import SimpleLoader
 from src.models.Location import Location
 from src.utils.Logger import Logger
+from src.loaders.DescLoader import DescLoader
 
 class LocationsLoader(SimpleLoader):
     """
-    Класс для загрузки локаций из JSON-файлов.
+    Класс для загрузки локаций из .desc файлов.
     """
     
     def __init__(self):
         """
         Инициализирует загрузчик локаций.
         """
-        self.locations_atlas = {}  # JSON данные локаций
+        self.locations_atlas = {}  # Данные локаций
         self.locations = {}  # Объекты локаций
         self.logger = Logger()
+        self.desc_loader = DescLoader()
     
     def load(self):
         """
-        Загружает все локации из JSON-файлов.
+        Загружает все локации из .desc файлов.
         
         Returns:
             dict: Атлас локаций
@@ -44,10 +45,10 @@ class LocationsLoader(SimpleLoader):
         else:
             self.logger.debug("Сканирование директории {}", locations_dir)
         
-        # Рекурсивно сканируем все директории
+        # Рекурсивно сканируем все директории и загружаем .desc файлы
         self._scan_directory(locations_dir)
         
-        # Создаем объекты локаций после загрузки JSON
+        # Создаем объекты локаций после загрузки данных
         self._create_locations()
         
         self.logger.info("LocationsLoader: загружено {} локаций", len(self.locations_atlas))
@@ -55,7 +56,7 @@ class LocationsLoader(SimpleLoader):
     
     def _create_locations(self):
         """
-        Создает объекты локаций на основе загруженных JSON данных.
+        Создает объекты локаций на основе загруженных данных.
         """
         created_count = 0
         for location_id, location_data in self.locations_atlas.items():
@@ -149,7 +150,7 @@ class LocationsLoader(SimpleLoader):
         
     def _scan_directory(self, directory):
         """
-        Рекурсивно сканирует директорию и загружает все JSON файлы с локациями.
+        Рекурсивно сканирует директорию и загружает все .desc файлы с локациями.
         
         Args:
             directory (str): Путь к директории
@@ -160,26 +161,26 @@ class LocationsLoader(SimpleLoader):
             if os.path.isdir(path):
                 # Рекурсивно обрабатываем поддиректории
                 self._scan_directory(path)
-            elif item.endswith(".json"):
-                # Загружаем JSON файл с локациями
+            elif item.endswith(".desc"):
+                # Загружаем .desc файл с локациями
                 self._load_locations_from_file(path)
 
     def _load_locations_from_file(self, file_path):
         """
-        Загружает локации из JSON файла.
+        Загружает локации из .desc файла.
         
         Args:
             file_path (str): Путь к файлу
         """
         try:
-            with open(file_path, "r", encoding="utf-8") as file:
-                locations_data = json.load(file)
+            # Используем DescLoader для загрузки данных из .desc файла
+            locations_data = self.desc_loader.load_file(file_path)
                 
-                if isinstance(locations_data, dict):
-                    for location_id, location_data in locations_data.items():
-                        # Добавляем локацию в атлас
-                        self.locations_atlas[location_id.lower()] = location_data
-                            
+            if isinstance(locations_data, dict):
+                for location_id, location_data in locations_data.items():
+                    # Добавляем локацию в атлас
+                    self.locations_atlas[location_id.lower()] = location_data
+                        
                 self.logger.debug("Загружено {} локаций из файла {}", len(locations_data), file_path)
         except Exception as e:
             self.logger.error("Ошибка при загрузке файла {}: {}", file_path, str(e)) 

@@ -1,7 +1,0 @@
-{
-  "test_food": {
-    "name": "Тестовый еда",
-    "description": "Тестовая еда",
-    "type": "food"
-  }
-}

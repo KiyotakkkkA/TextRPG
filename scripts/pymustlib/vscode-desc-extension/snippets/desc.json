@@ -1,0 +1,114 @@
+{
+  "Location Template": {
+    "prefix": "location",
+    "body": [
+      "LOCATION ${1:location_id} {",
+      "    name: \"${2:Название локации}\"",
+      "    description: \"${3:Описание локации}\"",
+      "    type: ${4:wilderness}",
+      "    color: \"${5:white}\"",
+      "",
+      "    RESOURCES {",
+      "        $6",
+      "    }",
+      "",
+      "    CONNECTIONS {",
+      "        $7",
+      "    }",
+      "",
+      "    PROPERTIES {",
+      "        $8",
+      "    }",
+      "}"
+    ],
+    "description": "Шаблон для создания новой локации"
+  },
+  "Item Template": {
+    "prefix": "item",
+    "body": [
+      "ITEM ${1:item_id} {",
+      "    name: \"${2:Название предмета}\"",
+      "    description: \"${3:Описание предмета}\"",
+      "    type: ${4:generic}",
+      "    icon: \"${5:🔷}\"",
+      "    value: ${6:10}",
+      "    weight: ${7:1}",
+      "    rarity: \"${8:COMMON}\"",
+      "",
+      "    PROPERTIES {",
+      "        $9",
+      "    }",
+      "}"
+    ],
+    "description": "Шаблон для создания нового предмета"
+  },
+  "Resource Template": {
+    "prefix": "resource",
+    "body": [
+      "RESOURCE ${1:resource_id} {",
+      "    min_amount: ${2:1}",
+      "    max_amount: ${3:3}",
+      "    respawn_time: ${4:300}",
+      "    required_tool: ${5:null}",
+      "}"
+    ],
+    "description": "Шаблон для создания нового ресурса"
+  },
+  "Connection Template": {
+    "prefix": "connection",
+    "body": [
+      "CONNECTION ${1:connection_id} {",
+      "    id: \"${2:target_location_id}\"",
+      "    name: \"${3:Название соединения}\"",
+      "    condition: ${4:null}",
+      "    icon: \"${5:🚪}\"",
+      "}"
+    ],
+    "description": "Шаблон для создания нового соединения между локациями"
+  },
+  "Character Template": {
+    "prefix": "character",
+    "body": [
+      "CHARACTER ${1:character_id} {",
+      "    name: \"${2:Имя персонажа}\"",
+      "    description: \"${3:Описание персонажа}\"",
+      "    type: ${4:npc}",
+      "    icon: \"${5:👤}\"",
+      "",
+      "    DIALOGUE {",
+      "        $6",
+      "    }",
+      "",
+      "    INVENTORY {",
+      "        $7",
+      "    }",
+      "}"
+    ],
+    "description": "Шаблон для создания нового персонажа"
+  },
+  "Property Key-Value": {
+    "prefix": "prop",
+    "body": "${1:key}: ${2:value}",
+    "description": "Создание свойства (ключ-значение)"
+  },
+  "String Property": {
+    "prefix": "str",
+    "body": "${1:key}: \"${2:value}\"",
+    "description": "Создание строкового свойства"
+  },
+  "Numeric Property": {
+    "prefix": "num",
+    "body": "${1:key}: ${2:0}",
+    "description": "Создание числового свойства"
+  },
+  "Boolean Property": {
+    "prefix": "bool",
+    "body": "${1:key}: ${2|true,false|}",
+    "description": "Создание булевого свойства"
+  },
+  "Array Property": {
+    "prefix": "arr",
+    "body": "${1:key}: [${2:items}]",
+    "description": "Создание массива"
+  }
+}

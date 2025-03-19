@@ -1,0 +1,58 @@
+{
+  "$schema": "vscode://schemas/color-theme",
+  "name": "DESC Color Theme",
+  "colors": {},
+  "tokenColors": [
+    {
+      "scope": "keyword.other.entity.desc",
+      "settings": {
+        "foreground": "#569CD6",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "scope": "support.type.property-name.desc",
+      "settings": {
+        "foreground": "#ff8c00",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "scope": "entity.name.class.desc",
+      "settings": {
+        "foreground": "#4EC9B0",
+        "fontStyle": ""
+      }
+    },
+    {
+      "scope": "string.quoted.double.desc, string.quoted.single.desc",
+      "settings": {
+        "foreground": "#CE9178"
+      }
+    },
+    {
+      "scope": "constant.numeric.desc",
+      "settings": {
+        "foreground": "#B5CEA8"
+      }
+    },
+    {
+      "scope": "constant.language.boolean.desc",
+      "settings": {
+        "foreground": "#569CD6"
+      }
+    },
+    {
+      "scope": "constant.language.null.desc",
+      "settings": {
+        "foreground": "#569CD6"
+      }
+    },
+    {
+      "scope": "keyword.type.desc",
+      "settings": {
+        "foreground": "#C586C0"
+      }
+    }
+  ]
+}

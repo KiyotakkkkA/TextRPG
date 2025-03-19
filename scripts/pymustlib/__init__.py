@@ -246,13 +246,36 @@ def version_info_command(args: List[str]) -> int:
     print(f"{Colors.YELLOW}Pymust v{version}{Colors.RESET}")
     return 0
 
+# Импортируем модуль для установки расширения
+try:
+    from scripts.install_vscode_extension import install_extension
+except ImportError:
+    # Определяем заглушку на случай, если модуль не найден
+    def install_extension():
+        print("Модуль установки расширения VSCode не найден.")
+        return False
+
+# Команда для установки расширения VSCode
+def install_vscode_extension_command(args: List[str]) -> int:
+    """Устанавливает расширение VSCode для подсветки синтаксиса .desc файлов"""
+    print(f"{Colors.BRIGHT_CYAN}Установка расширения VSCode для подсветки синтаксиса .desc файлов...{Colors.RESET}")
+    
+    if "--force" in args:
+        print(f"{Colors.YELLOW}Принудительная установка расширения...{Colors.RESET}")
+    
+    if install_extension():
+        print(f"{Colors.BRIGHT_GREEN}Расширение успешно установлено!{Colors.RESET}")
+        print(f"\n{Colors.BRIGHT_WHITE}Теперь файлы .desc будут поддерживать подсветку синтаксиса в VSCode.{Colors.RESET}")
+        return 0
+    else:
+        print(f"{Colors.BRIGHT_RED}Ошибка при установке расширения.{Colors.RESET}")
+        return 1
+
 # Регистрация команд
-registry.register("compile", "Компилирует файлы .desc в JSON", compile_resources_command)
-registry.register("desc2json", "Преобразует файл .desc в JSON", desc_to_json_command)
-registry.register("json2desc", "Преобразует JSON файл в формат .desc", json_to_desc_command)
 registry.register("update", "Обновляет версию игры или движка", update_version_command)
 registry.register("run", "Запускает игру", run_game_command)
 registry.register("version", "Выводит информацию о версии pymust", version_info_command)
+registry.register("install-extension", "Устанавливает расширение VSCode для .desc файлов", install_vscode_extension_command)
 
 # Функция для вывода общей справки
 def show_help() -> None:

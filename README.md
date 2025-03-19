@@ -10,6 +10,7 @@
 - Система преднагрузки ресурсов (ATLAS)
 - Система управления версиями
 - Удобный формат описания игровых сущностей (.desc)
+- Расширение VSCode для подсветки синтаксиса .desc файлов
 
 ## Установка
 
@@ -26,6 +27,9 @@ source .venv/bin/activate  # Linux/Mac
 
 # Установка зависимостей
 pip install -r requirements.txt
+
+# Установка расширения VSCode для подсветки .desc файлов (опционально)
+python pymust install-extension
 ```
 
 ## Запуск
@@ -41,6 +45,7 @@ python main.py
 - Автоматическую компиляцию в JSON при запуске игры
 - Комментарии и более понятный синтаксис
 - Легкое расширение для новых типов сущностей
+- Подсветку синтаксиса в VSCode (через расширение)
 
 ### Пример описания локации:
 
@@ -63,26 +68,29 @@ LOCATION forest {
 
 ## Управление версиями
 
-Версии игры и движка управляются через файл `version.properties`. Для обновления версии используйте утилиту `scripts/update_version.py`:
+Версии игры и движка управляются через файл `version.properties`. Для обновления версии используйте утилиту `scripts/update_version.py` или команду `pymust update`:
 
 ```bash
 # Просмотр информации о текущей версии
-python scripts/update_version.py --info
+python pymust version
 
 # Обновление патч-версии игры (0.1.0 -> 0.1.1)
-python scripts/update_version.py --patch
+python pymust update --patch
 
 # Обновление минорной версии игры (0.1.0 -> 0.2.0)
-python scripts/update_version.py --minor
+python pymust update --minor
 
 # Обновление мажорной версии игры (0.1.0 -> 1.0.0)
-python scripts/update_version.py --major
+python pymust update --major
 
 # Изменение стадии разработки
-python scripts/update_version.py --stage=Beta
+python pymust update --stage=Beta
 
 # Обновление версии движка
-python scripts/update_version.py --engine --patch
+python pymust update --engine --patch
+
+# Обновление версии pymust
+python pymust update --pymust --patch
 ```
 
 ### Формат версий

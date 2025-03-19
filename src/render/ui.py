@@ -116,7 +116,8 @@ class MenuItem:
     """
     def __init__(self, text: str, action: Optional[Callable] = None, enabled: bool = True,
                  icon: str = "", icon_color: str = Color.WHITE, 
-                 text_parts: Optional[List[Dict[str, str]]] = None):
+                 text_parts: Optional[List[Dict[str, str]]] = None, 
+                 key: Optional[int] = None):
         """
         Инициализирует элемент меню.
         
@@ -128,6 +129,7 @@ class MenuItem:
             icon_color: Цвет иконки
             text_parts: Список частей текста с указанием цвета для каждой части, 
                         формат: [{"text": "текст", "color": "цвет"}, ...]
+            key: Код клавиши для горячего доступа к пункту меню
         """
         self.text = text
         self.action = action
@@ -136,6 +138,7 @@ class MenuItem:
         self.icon_color = icon_color
         self.text_parts = text_parts
         self.is_rich_text = text_parts is not None
+        self.key = key
     
     def activate(self):
         """
@@ -192,6 +195,7 @@ class Menu(UIElement):
         """
         Форматирует тексты пунктов меню, чтобы они помещались по ширине.
         Длинные строки разбиваются на несколько строк.
+        Добавляет информацию о горячих клавишах, если они указаны.
         """
         self._formatted_texts = []
         self._effective_height = 0
@@ -204,10 +208,30 @@ class Menu(UIElement):
                 self._formatted_texts.append([])
                 self._effective_height += 1
                 continue
+            
+            # Формируем строку с горячей клавишей, если она определена
+            hotkey_text = ""
+            if item.key is not None:
+                # Определяем символ для отображения (только заглавные буквы)
+                key_char = ""
+                # Для букв (a-z или A-Z) всегда выводим заглавную версию
+                if 65 <= item.key <= 90:  # A-Z (уже заглавные)
+                    key_char = chr(item.key)
+                elif 97 <= item.key <= 122:  # a-z (переводим в заглавные)
+                    key_char = chr(item.key - 32)
+                else:
+                    key_char = chr(item.key) if item.key >= 32 and item.key <= 126 else f"[{item.key}]"
                 
+                hotkey_text = f" [{key_char}]"
+            
             # Если текст с иконкой, учитываем дополнительное место
             prefix_len = len(item.icon) + 1 if item.icon else 0
-            text_width = available_width - prefix_len
+            # Учитываем место для отображения горячей клавиши
+            hotkey_len = len(hotkey_text)
+            text_width = available_width - prefix_len - hotkey_len
+            
+            # Добавляем горячую клавишу к тексту
+            display_text = item.text + hotkey_text
             
             # Для форматированного текста используем особую обработку
             if item.is_rich_text:
@@ -216,18 +240,27 @@ class Menu(UIElement):
                 
                 if len(full_text) <= text_width:
                     # Короткий текст помещается полностью
+                    # Создаем копию text_parts и добавляем к нему часть с горячей клавишей
+                    updated_parts = item.text_parts.copy()
+                    if hotkey_text:
+                        updated_parts.append({"text": hotkey_text, "color": Color.BRIGHT_BLACK})
+                    
                     self._formatted_texts.append([{
-                        "text": full_text,
-                        "parts": item.text_parts,
+                        "text": full_text + hotkey_text,
+                        "parts": updated_parts,
                         "is_rich": True
                     }])
                     self._effective_height += 1
                 else:
                     # Для длинного форматированного текста необходимо разбить по частям
                     # Сохраняем полный текст без разбиения, но отмечаем, что он требует обрезки при рендеринге
+                    updated_parts = item.text_parts.copy()
+                    if hotkey_text:
+                        updated_parts.append({"text": hotkey_text, "color": Color.BRIGHT_BLACK})
+                    
                     self._formatted_texts.append([{
-                        "text": full_text,
-                        "parts": item.text_parts,
+                        "text": full_text + hotkey_text,
+                        "parts": updated_parts,
                         "is_rich": True,
                         "needs_wrap": True,
                         "width": text_width
@@ -236,10 +269,10 @@ class Menu(UIElement):
                     estimated_lines = (len(full_text) + text_width - 1) // text_width
                     self._effective_height += estimated_lines
             else:
-                # Обычный текст обрабатываем как раньше
+                # Обычный текст обрабатываем как раньше, но с горячей клавишей
                 if len(item.text) <= text_width:
                     # Короткий текст помещается полностью
-                    self._formatted_texts.append([item.text])
+                    self._formatted_texts.append([display_text])
                     self._effective_height += 1
                 else:
                     # Разбиваем длинный текст на строки
@@ -541,6 +574,33 @@ class Menu(UIElement):
         elif key == Keys.ENTER:
             self._activate_selected()
             return True
+        
+        # Проверяем, совпадает ли клавиша с горячей клавишей какого-либо пункта меню
+        # Учитываем регистр клавиши (верхний или нижний)
+        for index, item in enumerate(self.items):
+            if item.key is not None and item.enabled and item.text:
+                # Проверка на точное совпадение
+                if item.key == key:
+                    # Выбираем и активируем пункт меню
+                    self.selected_index = index
+                    self.mark_for_redraw()
+                    item.activate()
+                    return True
+                
+                # Проверка на совпадение с учетом регистра
+                # Если задана клавиша в верхнем регистре (A-Z), проверяем также нижний регистр (a-z)
+                if 65 <= item.key <= 90 and item.key + 32 == key:  # A-Z -> a-z (разница 32 в ASCII)
+                    self.selected_index = index
+                    self.mark_for_redraw()
+                    item.activate()
+                    return True
+                
+                # Если задана клавиша в нижнем регистре (a-z), проверяем также верхний регистр (A-Z)
+                if 97 <= item.key <= 122 and item.key - 32 == key:  # a-z -> A-Z (разница 32 в ASCII)
+                    self.selected_index = index
+                    self.mark_for_redraw()
+                    item.activate()
+                    return True
             
         return False
     

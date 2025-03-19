@@ -1,0 +1,91 @@
+{
+  "name": "desc-language",
+  "displayName": "DESC Language Support",
+  "description": "Подсветка синтаксиса и поддержка для файлов .desc в TextRPG",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "publisher": "textrpg-team",
+  "icon": "icon.png",
+  "author": {
+    "name": "TextRPG Team"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/textrpg"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "keywords": [
+    "desc",
+    "textrpg",
+    "game development",
+    "syntax highlighting"
+  ],
+  "activationEvents": [
+    "onLanguage:desc"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "desc",
+        "aliases": [
+          "DESC",
+          "desc"
+        ],
+        "extensions": [
+          ".desc"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icon.png",
+          "dark": "./icon.png"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "desc",
+        "scopeName": "source.desc",
+        "path": "./syntaxes/desc.tmLanguage.json"
+      }
+    ],
+    "themes": [
+      {
+        "label": "DESC Theme",
+        "uiTheme": "vs-dark",
+        "path": "./themes/desc-color-theme.json"
+      }
+    ],
+    "iconThemes": [
+      {
+        "id": "desc-icons",
+        "label": "DESC File Icons",
+        "path": "./icons/desc-icons.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "desc",
+        "path": "./snippets/desc.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "desc.showCompletions",
+        "title": "Показать автодополнения DESC"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "editor.action.triggerSuggest",
+        "key": "ctrl+space",
+        "when": "editorTextFocus && editorLangId == desc"
+      }
+    ]
+  }
+}

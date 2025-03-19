@@ -141,6 +141,20 @@ class GameSystem:
         locations_loader = self.ATLAS["LOCATIONS"]
         return locations_loader.get_location(location_id)
     
+    def get_all_locations(self):
+        """
+        Возвращает словарь всех доступных локаций.
+        
+        Returns:
+            Dict[str, Location]: Словарь с объектами локаций
+        """
+        if "LOCATIONS" not in self.ATLAS:
+            self.logger.error("Атлас локаций не загружен!")
+            return {}
+        
+        locations_loader = self.ATLAS["LOCATIONS"]
+        return locations_loader.get_all_locations()
+    
     def change_location(self, location_id):
         """
         Перемещает игрока в новую локацию.
@@ -163,7 +177,13 @@ class GameSystem:
             # Проверяем, есть ли соединение между локациями
             can_move = False
             for connection in current_location.connections:
-                if connection.get("id", "").lower() == location_id.lower():
+                # Проверяем, является ли соединение словарем или строкой
+                if isinstance(connection, dict):
+                    conn_id = connection.get("id", "").lower()
+                else:
+                    conn_id = str(connection).lower()
+                    
+                if conn_id == location_id.lower():
                     can_move = True
                     break
             

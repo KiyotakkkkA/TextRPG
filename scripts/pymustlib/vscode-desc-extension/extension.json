@@ -1,0 +1,36 @@
+{
+  "title": "DESC Language Support",
+  "version": "1.0.0",
+  "description": "Расширение для поддержки языка DESC в VSCode",
+  "features": [
+    "Подсветка синтаксиса для файлов .desc",
+    "Автодополнение кода и свойств",
+    "Сниппеты для быстрого создания шаблонов",
+    "Поддержка одинарных и двойных кавычек",
+    "Автоматическое закрытие скобок и кавычек",
+    "Подсветка блоков и свойств"
+  ],
+  "installation": {
+    "command": "python pymust install-extension",
+    "manual": [
+      "1. Скопировать папку vscode-desc-extension в ~/.vscode/extensions/textrpg-team.desc-language",
+      "2. Перезапустить VSCode",
+      "3. Открыть файл .desc для проверки работы расширения"
+    ]
+  },
+  "usage": {
+    "snippets": [
+      { "prefix": "location", "description": "Создает шаблон локации" },
+      { "prefix": "item", "description": "Создает шаблон предмета" },
+      { "prefix": "resource", "description": "Создает шаблон ресурса" },
+      { "prefix": "connection", "description": "Создает шаблон соединения" },
+      { "prefix": "character", "description": "Создает шаблон персонажа" },
+      { "prefix": "prop", "description": "Создает свойство (ключ-значение)" },
+      { "prefix": "str", "description": "Создает строковое свойство" },
+      { "prefix": "num", "description": "Создает числовое свойство" },
+      { "prefix": "bool", "description": "Создает булево свойство" },
+      { "prefix": "arr", "description": "Создает массив" }
+    ],
+    "autocompletion": "Автодополнение предлагает ключевые слова, свойства и значения в зависимости от контекста."
+  }
+}
