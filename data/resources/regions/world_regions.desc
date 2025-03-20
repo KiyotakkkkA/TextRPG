@@ -1,0 +1,56 @@
+REGION forest_region {
+    name: "Лесной край"
+    description: "Густой лесной массив с разнообразной флорой и фауной. Здесь можно найти множество ценных ресурсов и скрытых мест."
+    color: "green"
+    icon: "🌲"
+    difficulty: 1
+    climate: "умеренный"
+    locations: ["forest", "river"]
+    x: 2
+    y: 1
+    adjacent_regions: ["desert_region"]
+    
+    PROPERTIES {
+        main_resource: "wood"
+        has_settlements: false
+        danger_level: "low"
+    }
+}
+
+REGION desert_region {
+    name: "Пустынные земли"
+    description: "Жаркая пустыня с песчаными дюнами и редкой растительностью. Днем здесь невыносимо жарко, а ночью очень холодно."
+    color: "yellow"
+    icon: "🏜️"
+    difficulty: 2
+    climate: "жаркий"
+    locations: ["desert"]
+    x: 3
+    y: 1
+    adjacent_regions: ["forest_region", "mountain_region"]
+    
+    PROPERTIES {
+        main_resource: "sand"
+        has_settlements: false
+        danger_level: "medium"
+    }
+}
+
+REGION mountain_region {
+    name: "Горные вершины"
+    description: "Высокие горы с заснеженными вершинами и опасными перевалами. Здесь добывают редкие минералы и живут отшельники."
+    color: "gray"
+    icon: "⛰️"
+    difficulty: 3
+    climate: "холодный"
+    locations: []
+    x: 3
+    y: 0
+    adjacent_regions: ["desert_region"]
+    
+    PROPERTIES {
+        main_resource: "ore"
+        has_settlements: true
+        danger_level: "high"
+    }
+} 

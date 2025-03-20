@@ -3,6 +3,9 @@ LOCATION forest {
     description: "Густой лес с множеством растений и животных. Здесь можно найти различные лекарственные травы и редкие ингредиенты."
     type: wilderness
     color: green
+    region_id: "forest_region"
+    region_x: 1
+    region_y: 1
     RESOURCES {
         RESOURCE luhomir {
             min_amount: 2
@@ -54,6 +57,9 @@ LOCATION river {
     description: "Глубокая река с чистой водой. Вдоль берега растут ивы и камыши. Хорошее место для рыбалки."
     type: wilderness
     color: blue
+    region_id: "forest_region"
+    region_x: 0
+    region_y: 1
     RESOURCES {
         RESOURCE luhomir {
             min_amount: 2
@@ -76,6 +82,9 @@ LOCATION desert {
     description: "Жаркая и сухая пустыня с множеством растений и животных."
     type: wilderness
     color: yellow
+    region_id: "desert_region"
+    region_x: 1
+    region_y: 1
     RESOURCES {
         RESOURCE luhomir {
             min_amount: 2

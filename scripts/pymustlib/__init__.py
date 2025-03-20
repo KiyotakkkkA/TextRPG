@@ -170,6 +170,19 @@ def desc_to_json_command(args: List[str]) -> int:
     
     return 0
 
+def print_logo():
+    """Выводит логотип фреймворка Pymust"""
+    print(f"{Colors.BRIGHT_GREEN}")
+    print("  _____        __  __ _    _  _____ _______")
+    print(" |  __ \\      |  \\/  | |  | |/ ____|__   __|")
+    print(" | |__) |_   _| \\  / | |  | | (___    | |   ")
+    print(" |  ___/| | | | |\\/| | |  | |\\___ \\   | |   ")
+    print(" | |    | |_| | |  | | |__| |____) |  | |   ")
+    print(" |_|     \\__, |_|  |_|\\____/|_____/   |_|   ")
+    print("          __/ |                              ")
+    print("         |___/                               ")
+    print(f"{Colors.RESET}")
+
 def json_to_desc_command(args: List[str]) -> int:
     """Преобразует JSON файл в формат .desc"""
     print(f"{Colors.BRIGHT_CYAN}Преобразование JSON в .desc...{Colors.RESET}")
@@ -282,6 +295,7 @@ def show_help() -> None:
     """Выводит справку по всем командам"""
     version = get_pymust_version()
     print(f"{Colors.YELLOW}Pymust v{version} - менеджер команд{Colors.RESET}")
+    print_logo()
     print(f"\n{Colors.BRIGHT_WHITE}Доступные команды:{Colors.RESET}")
     
     for name, description in registry.list_commands():

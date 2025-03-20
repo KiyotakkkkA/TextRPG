@@ -8,11 +8,25 @@ from src.EventSystem import get_event_system, define_event
 
 class GameSystem:
     def __init__(self):
-        self.preloader = PreLoader()
+        """
+        Инициализирует игровую систему.
+        """
+        # Устанавливаем логгер
         self.logger = Logger()
-        self.player = Player(self, "Player")
-        self.ATLAS = None
+        
+        # Создаем систему событий
         self.event_system = get_event_system()
+        self.register_events()
+        
+        # Создаем преднагрузчик данных (ATLAS)
+        self.preloader = PreLoader()
+        
+        # Инициализируем игровой мир
+        self.current_location_id = None
+        self.current_region_id = None  # Текущий регион
+        
+        # Создаем игрока
+        self.player = Player(self, "Player")
         
         # Загружаем информацию о версии
         self.version_props = get_version_properties()
@@ -21,15 +35,9 @@ class GameSystem:
         self.engine_version = self.version_props.get("engine.version", "1.0.0")
         self.engine_name = self.version_props.get("engine.name", "TextRPG Engine")
         
-        # Текущая локация игрока (по умолчанию: "forest")
-        self.current_location_id = "forest"
-        
         # Логируем информацию о версии
         self.logger.info(f"Инициализация GameSystem - версия игры: v{self.game_version} {self.game_stage}")
         self.logger.info(f"Используется движок: {self.engine_name} v{self.engine_version}")
-        
-        # Регистрируем события
-        self.register_events()
 
     def register_events(self):
         """Регистрирует все события в системе с их документацией"""
@@ -100,9 +108,12 @@ class GameSystem:
         )
 
     def preload(self):
-        """Загружает все ресурсы игры"""
+        """
+        Загружает все необходимые данные для игры.
+        """
+        self.logger.info("GameSystem: Загрузка данных игры...")
         self.preloader.load()
-        self.ATLAS = self.preloader.get_atlas()
+        self.logger.info("GameSystem: Загрузка данных завершена!")
     
     def get_version_info(self):
         """Возвращает словарь с информацией о версии игры и движка"""
@@ -117,43 +128,89 @@ class GameSystem:
     
     def get_current_location(self):
         """
-        Возвращает текущую локацию игрока.
+        Возвращает текущую локацию.
         
         Returns:
-            Location: Объект текущей локации
+            Location: Текущая локация или None, если локация не задана
         """
+        if not self.current_location_id:
+            return None
+        
         return self.get_location(self.current_location_id)
+    
+    def get_current_region(self):
+        """
+        Возвращает текущий регион.
+        
+        Returns:
+            Region: Текущий регион или None, если регион не задан
+        """
+        if not self.current_region_id:
+            # Пытаемся определить регион по текущей локации
+            if self.current_location_id:
+                return self.get_region_for_location(self.current_location_id)
+            return None
+        
+        return self.get_region(self.current_region_id)
     
     def get_location(self, location_id):
         """
-        Возвращает локацию по ID.
+        Возвращает локацию по её ID.
         
         Args:
             location_id (str): ID локации
             
         Returns:
-            Location: Объект локации или None
+            Location: Локация или None, если локация не найдена
         """
-        if "LOCATIONS" not in self.ATLAS:
-            self.logger.error("Атлас локаций не загружен!")
-            return None
+        locations = self.preloader.ATLAS["LOCATIONS"]
+        return locations.get_location(location_id)
+    
+    def get_region(self, region_id):
+        """
+        Возвращает регион по его ID.
         
-        locations_loader = self.ATLAS["LOCATIONS"]
-        return locations_loader.get_location(location_id)
+        Args:
+            region_id (str): ID региона
+            
+        Returns:
+            Region: Регион или None, если регион не найден
+        """
+        regions = self.preloader.ATLAS["REGIONS"]
+        return regions.get_region(region_id)
+    
+    def get_region_for_location(self, location_id):
+        """
+        Возвращает регион, в котором находится указанная локация.
+        
+        Args:
+            location_id (str): ID локации
+            
+        Returns:
+            Region: Регион, в котором находится локация, или None
+        """
+        regions = self.preloader.ATLAS["REGIONS"]
+        return regions.get_region_for_location(location_id)
     
     def get_all_locations(self):
         """
-        Возвращает словарь всех доступных локаций.
+        Возвращает словарь всех локаций.
         
         Returns:
-            Dict[str, Location]: Словарь с объектами локаций
+            dict: Словарь всех локаций
         """
-        if "LOCATIONS" not in self.ATLAS:
-            self.logger.error("Атлас локаций не загружен!")
-            return {}
+        locations = self.preloader.ATLAS["LOCATIONS"]
+        return locations.get_all_locations()
+    
+    def get_all_regions(self):
+        """
+        Возвращает словарь всех регионов.
         
-        locations_loader = self.ATLAS["LOCATIONS"]
-        return locations_loader.get_all_locations()
+        Returns:
+            dict: Словарь всех регионов
+        """
+        regions = self.preloader.ATLAS["REGIONS"]
+        return regions.get_all_regions()
     
     def change_location(self, location_id):
         """
@@ -197,6 +254,21 @@ class GameSystem:
         # Меняем текущую локацию
         self.current_location_id = location_id
         
+        # Определяем и устанавливаем текущий регион
+        new_region = self.get_region_for_location(location_id)
+        if new_region:
+            previous_region_id = self.current_region_id
+            self.current_region_id = new_region.id
+            
+            # Если сменился регион, вызываем событие
+            if previous_region_id != self.current_region_id:
+                self.event_system.emit(
+                    "player_entered_region",
+                    self.current_region_id,
+                    new_region.name,
+                    previous_region_id
+                )
+        
         # Вызываем событие перемещения
         self.event_system.emit(
             "player_entered_location",
@@ -207,6 +279,33 @@ class GameSystem:
         
         self.logger.info(f"Игрок перешёл в локацию: {new_location.name}")
         return True
+    
+    def change_region(self, region_id):
+        """
+        Перемещает игрока в стартовую локацию указанного региона.
+        
+        Args:
+            region_id (str): ID региона
+            
+        Returns:
+            bool: True, если перемещение успешно
+        """
+        # Проверяем, существует ли регион
+        new_region = self.get_region(region_id)
+        if not new_region:
+            self.logger.error(f"Регион {region_id} не найден!")
+            return False
+        
+        # Проверяем, есть ли локации в регионе
+        if not new_region.location_ids:
+            self.logger.error(f"В регионе {region_id} нет локаций!")
+            return False
+        
+        # Получаем первую локацию в регионе
+        first_location_id = new_region.location_ids[0]
+        
+        # Перемещаемся в эту локацию
+        return self.change_location(first_location_id)
     
     def collect_resource(self, resource_id, amount=1):
         """
@@ -273,10 +372,10 @@ class GameSystem:
             return None
         
         # Проверяем регистр
-        if itemID.lower() in self.ATLAS["ITEMS"]:
-            return self.ATLAS["ITEMS"][itemID.lower()]
-        elif itemID in self.ATLAS["ITEMS"]:
-            return self.ATLAS["ITEMS"][itemID]
+        if itemID.lower() in self.preloader.ATLAS["ITEMS"]:
+            return self.preloader.ATLAS["ITEMS"][itemID.lower()]
+        elif itemID in self.preloader.ATLAS["ITEMS"]:
+            return self.preloader.ATLAS["ITEMS"][itemID]
         
         return None
     
@@ -288,5 +387,5 @@ class GameSystem:
             dt (float): Время, прошедшее с последнего обновления
         """
         # Обновляем локации (респавн ресурсов)
-        if "LOCATIONS" in self.ATLAS:
-            self.ATLAS["LOCATIONS"].update_all_locations()
+        if "LOCATIONS" in self.preloader.ATLAS:
+            self.preloader.ATLAS["LOCATIONS"].update_all_locations()

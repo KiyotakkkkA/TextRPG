@@ -33,6 +33,17 @@ def main():
     game_system = GameSystem()
     game_system.preload()
     
+    # Устанавливаем начальную локацию для отладки
+    try:
+        initial_location = game_system.get_location("forest")
+        if initial_location:
+            game_system.change_location("forest")
+            print(f"Установлена начальная локация: {initial_location.name}")
+        else:
+            print("ВНИМАНИЕ: Начальная локация 'forest' не найдена!")
+    except Exception as e:
+        print(f"Ошибка при установке начальной локации: {str(e)}")
+    
     # Инициализация движка рендеринга
     engine = Engine()
     

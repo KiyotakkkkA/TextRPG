@@ -25,6 +25,7 @@
       { "prefix": "resource", "description": "Создает шаблон ресурса" },
       { "prefix": "connection", "description": "Создает шаблон соединения" },
       { "prefix": "character", "description": "Создает шаблон персонажа" },
+      { "prefix": "region", "description": "Создает шаблон региона" },
       { "prefix": "prop", "description": "Создает свойство (ключ-значение)" },
       { "prefix": "str", "description": "Создает строковое свойство" },
       { "prefix": "num", "description": "Создает числовое свойство" },

@@ -30,6 +30,13 @@ class Location:
         self.icon = data.get("icon", "🌍")
         self.color = data.get("color", "white")
         
+        # Связь с регионом
+        self.region_id = data.get("region_id", "")
+        
+        # Координаты внутри региона
+        self.region_x = data.get("region_x", 0)
+        self.region_y = data.get("region_y", 0)
+        
         # Ресурсы, доступные на локации
         self.available_resources = {}
         self._resources_data = data.get("resources", {})
@@ -130,7 +137,7 @@ class Location:
     
     def to_dict(self) -> Dict[str, Any]:
         """
-        Преобразует локацию в словарь для сериализации.
+        Возвращает словарь с данными локации.
         
         Returns:
             dict: Словарь с данными локации
@@ -142,11 +149,14 @@ class Location:
             "type": self.type,
             "icon": self.icon,
             "color": self.color,
-            "available_resources": self.available_resources,
+            "region_id": self.region_id,
+            "region_x": self.region_x,
+            "region_y": self.region_y,
+            "resources": self._resources_data,
             "connections": self.connections,
             "characters": self.characters,
             "properties": self.properties,
-            "last_resources_update": self.last_resources_update
+            "resources_respawn_time": self.resources_respawn_time
         }
     
     def __str__(self) -> str:

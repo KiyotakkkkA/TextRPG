@@ -100,6 +100,22 @@ function activate(context) {
       { name: "ambient_sound", detail: "Фоновый звук", type: "string" },
       { name: "weather", detail: "Погода", type: "array" },
     ],
+    REGION: [
+      { name: "name", detail: "Название региона", type: "string" },
+      { name: "description", detail: "Описание региона", type: "string" },
+      { name: "color", detail: "Цвет отображения региона", type: "string" },
+      { name: "icon", detail: "Иконка региона", type: "string" },
+      { name: "difficulty", detail: "Уровень сложности", type: "number" },
+      { name: "climate", detail: "Климат", type: "string" },
+      { name: "locations", detail: "Локации в регионе", type: "array" },
+      { name: "x", detail: "Координата X", type: "number" },
+      { name: "y", detail: "Координата Y", type: "number" },
+      {
+        name: "adjacent_regions",
+        detail: "Приграничные регионы",
+        type: "array",
+      },
+    ],
   };
 
   // Определение значений для перечислений

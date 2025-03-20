@@ -86,6 +86,30 @@
     ],
     "description": "Шаблон для создания нового персонажа"
   },
+  "Region Template": {
+    "prefix": "region",
+    "body": [
+      "REGION ${1:region_id} {",
+      "    name: \"${2:Название региона}\"",
+      "    description: \"${3:Описание региона}\"",
+      "    color: \"${4:green}\"",
+      "    icon: \"${5:🌲}\"",
+      "    difficulty: ${6:1}",
+      "    climate: \"${7:умеренный}\"",
+      "    locations: [\"${8:forest}\", \"${9:river}\"]",
+      "    x: ${10:2}",
+      "    y: ${11:1}",
+      "    adjacent_regions: [\"${12:desert_region}\"]",
+      "",
+      "    PROPERTIES {",
+      "        main_resource: \"${13:wood}\"",
+      "        has_settlements: ${14:false}",
+      "        danger_level: \"${15:low}\"",
+      "    }",
+      "}"
+    ],
+    "description": "Шаблон для создания нового региона"
+  },
   "Property Key-Value": {
     "prefix": "prop",
     "body": "${1:key}: ${2:value}",
