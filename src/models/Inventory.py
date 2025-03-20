@@ -1,6 +1,8 @@
-class Inventory:
-    def __init__(self, items: dict[str, int] = {}):
-        self.items = items
+from src.models.interfaces import Serializable
+
+class Inventory(Serializable):
+    def __init__(self, items: dict[str, int] = None):
+        self.items = items if items is not None else {}
     
     def add_item_by_id(self, itemID: str, count: int = 1) -> bool:
         """

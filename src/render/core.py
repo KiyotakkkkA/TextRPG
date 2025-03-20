@@ -19,15 +19,30 @@ colorama.init()
 
 # Константы для навигации
 class Keys:
-    UP = 72
-    DOWN = 80
-    LEFT = 75
-    RIGHT = 77
+    # Стандартные коды
     ENTER = 13
     ESCAPE = 27
     SPACE = 32
     TAB = 9
     BACKSPACE = 8
+    
+    # Стрелки (Windows extended keys)
+    UP = 72
+    DOWN = 80
+    LEFT = 75
+    RIGHT = 77
+    
+    # Альтернативные коды для стрелок (для разных систем)
+    UP_ALT = 38    # Windows VK_UP
+    DOWN_ALT = 40  # Windows VK_DOWN
+    LEFT_ALT = 37  # Windows VK_LEFT
+    RIGHT_ALT = 39 # Windows VK_RIGHT
+    
+    # WASD для альтернативной навигации
+    W = ord('w')
+    A = ord('a')
+    S = ord('s')
+    D = ord('d')
     
     @staticmethod
     def from_char(char: str) -> int:
@@ -45,6 +60,26 @@ class Keys:
         
         # Преобразуем символ в нижний регистр и получаем его ASCII-код
         return ord(char.lower())
+        
+    @staticmethod
+    def is_up(key: int) -> bool:
+        """Проверяет, является ли код клавишей "вверх" """
+        return key in [Keys.UP, Keys.UP_ALT, Keys.W]
+    
+    @staticmethod
+    def is_down(key: int) -> bool:
+        """Проверяет, является ли код клавишей "вниз" """
+        return key in [Keys.DOWN, Keys.DOWN_ALT, Keys.S]
+    
+    @staticmethod
+    def is_left(key: int) -> bool:
+        """Проверяет, является ли код клавишей "влево" """
+        return key in [Keys.LEFT, Keys.LEFT_ALT, Keys.A]
+    
+    @staticmethod
+    def is_right(key: int) -> bool:
+        """Проверяет, является ли код клавишей "вправо" """
+        return key in [Keys.RIGHT, Keys.RIGHT_ALT, Keys.D]
 
 # Константы для цветов
 class Color:

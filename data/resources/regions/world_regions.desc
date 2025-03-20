@@ -29,6 +29,7 @@ REGION desert_region {
     y: 1
     adjacent_regions: ["forest_region", "mountain_region"]
     
+    
     PROPERTIES {
         main_resource: "sand"
         has_settlements: false

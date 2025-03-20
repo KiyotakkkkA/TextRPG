@@ -1,17 +1,21 @@
 from src.models.Inventory import Inventory
 from typing import TYPE_CHECKING
 from src.EventSystem import get_event_system
+from src.models.interfaces import Serializable
 
 if TYPE_CHECKING:
     from src.GameSystem import GameSystem
 
-class Player:
+class Player(Serializable):
     def __init__(self, game: 'GameSystem', name: str):
         self.name = name
         self.inventory = Inventory()
         self.game_system = game
         self.game = game
         self.event_system = get_event_system()
+        
+        self.level = 1
+        self.gold = 0
 
     def get_item_by_id(self, itemID: str):
         """

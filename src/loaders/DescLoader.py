@@ -86,6 +86,7 @@ class DescLoader:
         in_connections_block = False
         in_characters_block = False
         in_resources_block = False
+        in_requires_block = False  # Новый флаг для блока REQUIRES
         
         
         while i < len(lines):
@@ -114,6 +115,7 @@ class DescLoader:
                     in_connections_block = False
                     in_characters_block = False
                     in_resources_block = False
+                    in_requires_block = False  # Сбрасываем флаг для REQUIRES
                 
                 # Особая обработка CONNECTION внутри блока CONNECTIONS
                 elif in_connections_block and entity_type == "CONNECTION":
@@ -179,7 +181,7 @@ class DescLoader:
                 i += 1
                 continue
             
-            # Проверяем начало блока (RESOURCES, CONNECTIONS и т.д.)
+            # Проверяем начало блока (RESOURCES, CONNECTIONS, REQUIRES и т.д.)
             block_match = self.block_start_re.match(line)
             if block_match:
                 block_type = block_match.group(1)
@@ -199,6 +201,11 @@ class DescLoader:
                     in_resources_block = True
                     # Создаем словарь для ресурсов
                     current_dict[block_type.lower()] = {}
+                elif block_type == "REQUIRES":
+                    # Новый блок для требований
+                    in_requires_block = True
+                    # Создаем словарь для требований
+                    current_dict["requires"] = {}
                 else:
                     # Для других блоков просто создаем обычный словарь
                     current_dict[block_type.lower()] = {}
@@ -221,6 +228,8 @@ class DescLoader:
                     in_characters_block = False
                 elif in_resources_block and current_key == "RESOURCES":
                     in_resources_block = False
+                elif in_requires_block and current_key == "REQUIRES":
+                    in_requires_block = False
                 
                 # Если мы завершаем блок CONNECTION внутри CONNECTIONS,
                 # нам не нужно ничего делать, так как соединение уже добавлено в список

@@ -221,6 +221,14 @@ def update_version_command(args: List[str]) -> int:
     """Обновляет версию игры, движка или pymust"""
     print(f"{Colors.BRIGHT_CYAN}Управление версиями...{Colors.RESET}")
     
+    # Проверяем наличие параметров --log и --name
+    parser = argparse.ArgumentParser(description="Обновление версии")
+    parser.add_argument('--log', action='store_true', help='Создать запись в журнале изменений')
+    parser.add_argument('--name', type=str, help='Название обновления для отображения в главном меню')
+    
+    # Парсим только известные аргументы
+    parsed_args, remaining_args = parser.parse_known_args(args)
+    
     # Импортируем модуль update_version.py
     update_version_module = import_module_from_file(
         str(SCRIPTS_DIR / "update_version.py"), 
@@ -231,6 +239,12 @@ def update_version_command(args: List[str]) -> int:
     # Передаем аргументы как есть, так как модуль уже использует argparse
     sys.argv = [sys.argv[0]] + args
     update_version_module.main()
+    
+    # Если создан changelog, выводим дополнительную информацию
+    if parsed_args.log:
+        print(f"\n{Colors.BRIGHT_CYAN}Журнал изменений создан!{Colors.RESET}")
+        if parsed_args.name:
+            print(f"{Colors.BRIGHT_GREEN}Название обновления: {Colors.BRIGHT_YELLOW}{parsed_args.name}{Colors.RESET}")
     
     return 0
 

@@ -60,14 +60,18 @@ class RegionsLoader(SimpleLoader):
         Создает объекты Region из загруженных данных.
         """
         for region_id, data in regions_data.items():
-            # Создаем объект Region
-            region = Region(region_id, data)
+            # Добавляем region_id в словарь data
+            data_copy = data.copy()
+            data_copy["id"] = region_id
+            
+            # Создаем объект Region с одним параметром
+            region = Region(data_copy)
             
             # Добавляем в словарь регионов
             self.regions[region_id] = region
             
             # Обновляем словарь соответствия локаций регионам
-            for location_id in region.location_ids:
+            for location_id in region.locations:
                 self.location_to_region[location_id] = region_id
     
     def get_region(self, region_id: str) -> Optional[Region]:

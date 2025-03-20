@@ -9,7 +9,10 @@ import json
 import copy  # Добавляю импорт модуля copy для глубокого копирования
 from typing import Dict, List, Any, Optional
 
-class Location:
+from src.models.interfaces.Require import Require
+from src.models.interfaces.Serializable import Serializable
+
+class Location(Require, Serializable):
     """
     Класс, представляющий локацию в игровом мире.
     Локация содержит ресурсы, которые можно собирать, и соединения с другими локациями.
@@ -50,6 +53,9 @@ class Location:
         
         # Дополнительные свойства локации
         self.properties = data.get("properties", {})
+        
+        # Требования для доступа к локации
+        self.requires = data.get("requires", {})
         
         # Время последнего обновления ресурсов
         self.last_resources_update = 0
@@ -166,4 +172,59 @@ class Location:
         Returns:
             str: Строковое представление
         """
-        return f"{self.icon} {self.name} [{self.id}]" 
+        return f"{self.icon} {self.name} [{self.id}]"
+
+    def can_access(self, player, game_system) -> bool:
+        """
+        Проверяет, может ли игрок получить доступ к этой локации.
+        
+        Args:
+            player: Объект игрока
+            game_system: Игровая система
+            
+        Returns:
+            bool: True, если игрок может получить доступ, иначе False
+        """
+        # Проверяем требования для доступа к локации
+        return self.check_requirements(self.requires, player, game_system)
+    
+    def can_use_connection(self, connection_id: str, player, game_system) -> bool:
+        """
+        Проверяет, может ли игрок использовать соединение для перехода в другую локацию.
+        
+        Args:
+            connection_id (str): ID соединения
+            player: Объект игрока
+            game_system: Игровая система
+            
+        Returns:
+            bool: True, если игрок может использовать соединение, иначе False
+        """
+        # Ищем соединение по ID
+        for conn in self.connections:
+            # Проверяем, является ли соединение словарем или строкой
+            conn_id = ""
+            if isinstance(conn, dict):
+                conn_id = conn.get("id", "").lower()
+                # Проверяем требования для соединения
+                requires = conn.get("requires", {})
+                if conn_id == connection_id.lower():
+                    # Проверяем требования соединения
+                    if requires and not self.check_requirements(requires, player, game_system):
+                        return False
+                    
+                    # Проверяем требования целевой локации
+                    target_location = game_system.get_location(conn_id)
+                    if target_location:
+                        return target_location.can_access(player, game_system)
+                    return False
+            else:
+                conn_id = str(conn).lower()
+                if conn_id == connection_id.lower():
+                    # Проверяем требования целевой локации
+                    target_location = game_system.get_location(conn_id)
+                    if target_location:
+                        return target_location.can_access(player, game_system)
+                    return False
+                
+        return False 

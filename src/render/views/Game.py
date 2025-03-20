@@ -393,22 +393,56 @@ class GameScreen(Screen):
             for conn in location.connections:
                 # Проверяем, является ли соединение словарем или строкой
                 if isinstance(conn, dict):
+                    conn_id = conn.get("id", "").lower()
                     conn_name = conn.get("name", "Неизвестно")
                     icon = conn.get("icon", "🧭")
-                    condition = conn.get("condition", None)
                 else:
                     # Если это строка или другой тип, используем значение как есть
+                    conn_id = str(conn).lower()
                     conn_name = str(conn)
                     icon = "🧭"
-                    condition = None
                 
-                # Проверяем доступность направления по условию
-                if condition:
-                    conn_text = f"  {icon} {conn_name} (требуется: {condition})"
-                    conn_color = Color.BRIGHT_BLACK  # Недоступно - тусклый цвет
-                else:
+                # Проверяем, может ли игрок использовать это соединение
+                can_use_connection = location.can_use_connection(conn_id, self.game_system.player, self.game_system)
+                
+                if can_use_connection:
                     conn_text = f"  {icon} {conn_name}"
                     conn_color = Color.WHITE
+                else:
+                    # Получаем требования для перехода
+                    target_location = self.game_system.get_location(conn_id)
+                    if target_location:
+                        # Проверяем требования локации
+                        player_level = self.game_system.player.level
+                        
+                        if player_level < target_location.requires.get("player_has_level", 0):
+                            reason = f"[нужен уровень {target_location.requires.get('player_has_level')}]"
+                        elif "player_has_items" in target_location.requires:
+                            items_needed = []
+                            for item_id, count in target_location.requires["player_has_items"].items():
+                                item_data = self.game_system.get_item(item_id)
+                                item_name = item_data.get("name", item_id) if item_data else item_id
+                                items_needed.append(f"{item_name} x{count}")
+                            reason = f"[нужны предметы: {', '.join(items_needed)}]"
+                        elif "player_has_gold" in target_location.requires:
+                            gold_needed = target_location.requires["player_has_gold"]
+                            reason = f"[нужно {gold_needed} золота]"
+                        elif "player_has_completed_quest" in target_location.requires:
+                            quest_id = target_location.requires["player_has_completed_quest"]
+                            reason = f"[нужно завершить квест: {quest_id}]"
+                        else:
+                            reason = "[недоступно]"
+                    else:
+                        reason = "[недоступно]"
+                    
+                    # Полный текст с именем локации и причиной
+                    conn_text = f"{icon} {conn_name} "
+                    conn_color = Color.BRIGHT_BLACK  # Серый цвет для недоступной локации
+                    
+                    # Добавляем весь текст сразу, а затем отдельно причину красным цветом
+                    self.description_text.add_text(conn_text, conn_color, new_line=True)
+                    self.description_text.add_text(reason, Color.BRIGHT_RED, new_line=False)
+                    continue  # Переходим к следующему направлению, так как этот уже добавлен
                 
                 self.description_text.add_text(conn_text, conn_color)
         
@@ -541,13 +575,17 @@ class GameScreen(Screen):
             def create_move_action(target_id):
                 return lambda: self.on_move_to_location(target_id)
             
+            # Проверяем, может ли игрок использовать это соединение
+            can_use_connection = location.can_use_connection(conn_id, self.game_system.player, self.game_system)
+            
             # Добавляем пункт меню для перемещения
             items.append(MenuItem(
                 f"Идти в: {conn_name}",
                 create_move_action(conn_id),
+                enabled=can_use_connection,  # Делаем пункт меню неактивным, если переход недоступен
                 text_parts=[
                     {"text": "Идти в: ", "color": Color.WHITE},
-                    {"text": conn_name, "color": Color.BRIGHT_YELLOW}
+                    {"text": conn_name, "color": Color.BRIGHT_YELLOW if can_use_connection else Color.BRIGHT_BLACK}
                 ]
             ))
         

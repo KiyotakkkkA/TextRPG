@@ -16,6 +16,7 @@ function activate(context) {
     "CONNECTION",
     "EFFECT",
     "DIALOGUE",
+    "REQUIRES",
     "PROPERTIES",
     "RESOURCES",
     "CONNECTIONS",
@@ -114,6 +115,28 @@ function activate(context) {
         name: "adjacent_regions",
         detail: "Приграничные регионы",
         type: "array",
+      },
+    ],
+    REQUIRES: [
+      {
+        name: "player_has_level",
+        detail: "Требуемый уровень игрока",
+        type: "number",
+      },
+      {
+        name: "player_has_items",
+        detail: "Требуемые предметы игрока",
+        type: "array",
+      },
+      {
+        name: "player_has_gold",
+        detail: "Требуемое количество золота",
+        type: "number",
+      },
+      {
+        name: "player_has_completed_quest",
+        detail: "Требуемый завершенный квест",
+        type: "string",
       },
     ],
   };

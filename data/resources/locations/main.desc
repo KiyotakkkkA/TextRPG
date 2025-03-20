@@ -85,6 +85,11 @@ LOCATION desert {
     region_id: "desert_region"
     region_x: 1
     region_y: 1
+
+    REQUIRES {
+        player_has_level: 3
+    }
+    
     RESOURCES {
         RESOURCE luhomir {
             min_amount: 2

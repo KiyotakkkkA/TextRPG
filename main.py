@@ -1,15 +1,22 @@
+#!/usr/bin/env python
 """
-Главный файл игры TextRPG Adventure.
-Инициализирует движок рендеринга и игровую систему.
+Основной файл запуска игры TextRPG.
 """
 
 import os
 import sys
+import time
 from pathlib import Path
 
-from src.GameSystem import GameSystem
+# Добавляем родительскую директорию в пути поиска модулей
+current_dir = Path(__file__).parent
+sys.path.append(str(current_dir))
+
+# Импорты игровых модулей
 from src.render.core import Engine
-from src.render.screens import MainMenuScreen, GameScreen
+from src.render.views.MainMenu import MainMenuScreen, UpdateScreen
+from src.render.views.Game import GameScreen
+from src.GameSystem import GameSystem
 from src.utils.PropertiesLoader import get_version_properties
 
 def main():
@@ -56,6 +63,7 @@ def main():
     # Создание и регистрация экранов
     main_menu = MainMenuScreen(engine, "TextRPG Adventure")
     game_screen = GameScreen(engine)
+    update_screen = UpdateScreen(engine)
     
     # Устанавливаем ссылку на игровую систему в игровой экран
     game_screen.set_game_system(game_system)
@@ -103,6 +111,7 @@ def main():
     # Регистрация экранов
     engine.register_screen("main_menu", main_menu)
     engine.register_screen("game", game_screen)
+    engine.register_screen("update", update_screen)
     
     # Устанавливаем начальный экран
     engine.set_current_screen("main_menu")

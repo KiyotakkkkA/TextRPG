@@ -1,4 +1,17 @@
 {
+  "Requires Template": {
+    "prefix": "requires",
+    "body": [
+      "REQUIRES {",
+      "    player_has_level: ${1:3}",
+      "    player_has_items: ${2:['item1', 'item2']}",
+      "    player_has_gold: ${3:100}",
+      "    player_has_completed_quest: ${4:quest_id}",
+      "}"
+    ],
+    "description": "Шаблон для создания требований к локации"
+  },
+
   "Location Template": {
     "prefix": "location",
     "body": [
