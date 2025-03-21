@@ -63,11 +63,8 @@ def update_game_version(increment_type='patch'):
     
     # Обновляем версию в свойствах
     props.set('game.version', new_version)
-    
-    # Обновляем дату сборки (опционально)
-    from datetime import datetime
-    build_date = datetime.now().strftime('%Y%m%d')
-    props.set('game.build', build_date)
+    # Обновляем номер сборки
+    update_build_number(props)
     
     # Сохраняем изменения
     props.save()
@@ -91,6 +88,9 @@ def update_engine_version(increment_type='patch'):
     # Обновляем версию в свойствах
     props.set('engine.version', new_version)
     
+    # Обновляем номер сборки
+    update_build_number(props)
+    
     # Сохраняем изменения
     props.save()
     
@@ -113,10 +113,40 @@ def update_pymust_version(increment_type='patch'):
     # Обновляем версию в свойствах
     props.set('pymust.version', new_version)
     
+    # Обновляем номер сборки
+    update_build_number(props)
+    
     # Сохраняем изменения
     props.save()
     
     return new_version
+
+def update_build_number(props=None):
+    """
+    Обновляет номер сборки до текущей даты.
+    
+    Args:
+        props: Объект PropertiesLoader, если None, будет получен через get_version_properties()
+        
+    Returns:
+        str: Новый номер сборки
+    """
+    if props is None:
+        props = get_version_properties()
+        
+    # Генерируем номер сборки на основе текущей даты
+    from datetime import datetime
+    build_date = datetime.now().strftime('%Y%m%d')
+    
+    # Обновляем номер сборки в свойствах
+    props.set('game.build', build_date)
+    
+    # Если props передан как аргумент, не сохраняем изменения
+    # (это будет сделано вызывающей функцией)
+    if props is None:
+        props.save()
+        
+    return build_date
 
 def set_game_stage(stage):
     """

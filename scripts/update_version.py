@@ -34,7 +34,8 @@ from src.utils.scripts.version_utils import (
     update_engine_version,
     update_pymust_version,
     set_game_stage, 
-    get_full_version_info
+    get_full_version_info,
+    update_build_number
 )
 
 # Импортируем цвета из pymustlib, если доступно
@@ -79,16 +80,29 @@ def generate_art(text, letters):
     # Определяем максимальное количество строк
     max_lines = max([len(lines) for lines in art_lines], default=0)
     
+    # Определяем стандартную ширину символа (включая дополнительный пробел)
+    # Для большинства символов это 7 символов + 1 пробел = 8
+    standard_width = 8
+    
     # Формируем итоговый арт
     result = []
     for i in range(max_lines):
         line = ""
-        for char_lines in art_lines:
+        for j, char_lines in enumerate(art_lines):
+            # Добавляем содержимое текущей строки символа или пробелы
             if i < len(char_lines):
-                line += char_lines[i] + " "
+                current_part = char_lines[i]
+                line += current_part
+                # Добавляем нужное количество пробелов для выравнивания
+                if j < len(art_lines) - 1:  # Если это не последний символ
+                    # Вычисляем, сколько пробелов нужно добавить
+                    padding = standard_width - len(current_part)
+                    line += " " * padding
             else:
-                # Если у символа меньше строк, добавляем пробелы
-                line += " " * (len(char_lines[0]) + 1)
+                # Если строки нет, добавляем пробелы для сохранения выравнивания
+                if j < len(art_lines) - 1:  # Если это не последний символ
+                    line += " " * standard_width
+        
         result.append(line)
     
     return '\n'.join(result)
@@ -201,6 +215,7 @@ def main():
     version_group.add_argument('--patch', action='store_true', help='Увеличить патч-версию (0.1.0 -> 0.1.1)')
     version_group.add_argument('--minor', action='store_true', help='Увеличить минорную версию (0.1.0 -> 0.2.0)')
     version_group.add_argument('--major', action='store_true', help='Увеличить мажорную версию (0.1.0 -> 1.0.0)')
+    version_group.add_argument('--build', action='store_true', help='Обновить только номер сборки без изменения версии')
     
     # Стадия разработки
     parser.add_argument('--stage', type=str, help='Установить стадию разработки (Alpha, Beta, RC, Release)')
@@ -220,7 +235,7 @@ def main():
     args = parser.parse_args()
     
     # Просмотр информации о версии
-    if args.info or (not any([args.patch, args.minor, args.major, args.stage])):
+    if args.info or (not any([args.patch, args.minor, args.major, args.build, args.stage])):
         info = get_full_version_info()
         print(f"\n{Colors.BRIGHT_CYAN}Информация о текущей версии:{Colors.RESET}")
         print(f"{Colors.BRIGHT_GREEN}Игра: {Colors.BRIGHT_YELLOW}{info['game']['full']}{Colors.RESET}")
@@ -249,8 +264,20 @@ def main():
     elif args.major:
         increment_type = 'major'
     
+    # Обновление только номера сборки
+    if args.build:
+        print(f"{Colors.BRIGHT_CYAN}Обновление номера сборки...{Colors.RESET}")
+        new_build = update_build_number()
+        print(f"{Colors.BRIGHT_GREEN}Номер сборки обновлен до: {Colors.BRIGHT_YELLOW}{new_build}{Colors.RESET}")
+        
+        # Если указан флаг --log, создаем запись в журнале изменений
+        if args.log:
+            print(f"{Colors.BRIGHT_CYAN}Создание записи в журнале изменений...{Colors.RESET}")
+            update_hash = create_changelog_entry(args.name)
+            print(f"{Colors.BRIGHT_GREEN}Запись создана с хешем: {Colors.BRIGHT_YELLOW}{update_hash}{Colors.RESET}")
+    
     # Обновление версии
-    if args.patch or args.minor or args.major:
+    elif args.patch or args.minor or args.major:
         if args.engine:
             print(f"{Colors.BRIGHT_CYAN}Обновление версии движка (тип: {increment_type})...{Colors.RESET}")
             new_version = update_engine_version(increment_type)
