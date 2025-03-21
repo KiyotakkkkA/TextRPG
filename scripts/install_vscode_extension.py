@@ -24,22 +24,25 @@ def get_vscode_extensions_dir() -> Optional[Path]:
         # %USERPROFILE%\.vscode\extensions
         user_profile = os.environ.get("USERPROFILE")
         if user_profile:
-            extensions_dir = Path(user_profile) / ".vscode" / "extensions"
-            return extensions_dir
+            vscode_extensions_dir = Path(user_profile) / ".vscode" / "extensions"
+            cursor_extensions_dir = Path(user_profile) / ".cursor" / "extensions"
+            return vscode_extensions_dir, cursor_extensions_dir
     
     elif system == "Darwin":  # macOS
         # ~/.vscode/extensions
         home = os.environ.get("HOME")
         if home:
-            extensions_dir = Path(home) / ".vscode" / "extensions"
-            return extensions_dir
+            vscode_extensions_dir = Path(home) / ".vscode" / "extensions"
+            cursor_extensions_dir = Path(home) / ".cursor" / "extensions"
+            return vscode_extensions_dir, cursor_extensions_dir
     
     elif system == "Linux":
         # ~/.vscode/extensions
         home = os.environ.get("HOME")
         if home:
-            extensions_dir = Path(home) / ".vscode" / "extensions"
-            return extensions_dir
+            vscode_extensions_dir = Path(home) / ".vscode" / "extensions"
+            cursor_extensions_dir = Path(home) / ".cursor" / "extensions"
+            return vscode_extensions_dir, cursor_extensions_dir
     
     return None
 
@@ -86,18 +89,13 @@ def install_extension() -> bool:
         return False
     
     # Получаем директорию расширений VSCode
-    extensions_dir = get_vscode_extensions_dir()
-    if not extensions_dir:
+    vscode_extensions_dir, cursor_extensions_dir = get_vscode_extensions_dir()
+    if not vscode_extensions_dir:
         print("Не удалось определить директорию расширений VSCode.")
         return False
-    
-    # Создаем директорию расширений, если её нет
-    if not extensions_dir.exists():
-        try:
-            extensions_dir.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            print(f"Ошибка при создании директории расширений: {e}")
-            return False
+    if not cursor_extensions_dir:
+        print("Не удалось определить директорию расширений Cursor.")
+        return False
     
     # Путь к исходной директории расширения
     current_dir = Path(__file__).parent
@@ -108,23 +106,32 @@ def install_extension() -> bool:
         return False
     
     # Целевая директория для расширения
-    target_dir = extensions_dir / "textrpg-team.desc-language"
+    vscode_target_dir = vscode_extensions_dir / "textrpg-team.desc-language"
+    cursor_target_dir = cursor_extensions_dir / "textrpg-team.desc-language"
     
     # Удаляем предыдущую версию расширения, если она существует
-    if target_dir.exists():
+    if vscode_target_dir.exists():
         try:
-            shutil.rmtree(target_dir)
+            shutil.rmtree(vscode_target_dir)
+        except Exception as e:
+            print(f"Ошибка при удалении предыдущей версии расширения: {e}")
+            return False
+    if cursor_target_dir.exists():
+        try:
+            shutil.rmtree(cursor_target_dir)
         except Exception as e:
             print(f"Ошибка при удалении предыдущей версии расширения: {e}")
             return False
     
     # Копируем расширение в директорию расширений VSCode
     try:
-        shutil.copytree(source_dir, target_dir)
-        print(f"Расширение успешно установлено в: {target_dir}")
+        shutil.copytree(source_dir, vscode_target_dir)
+        shutil.copytree(source_dir, cursor_target_dir)
+        print(f"Расширение успешно установлено в: {vscode_target_dir}")
+        print(f"Расширение успешно установлено в: {cursor_target_dir}")
         
         # Если VSCode запущен, предлагаем перезапустить
-        print("Для применения изменений может потребоваться перезапустить VSCode.")
+        print("Для применения изменений может потребоваться перезапустить VSCode и Cursor")
         return True
     except Exception as e:
         print(f"Ошибка при копировании расширения: {e}")
@@ -134,7 +141,7 @@ def main():
     """
     Основная функция скрипта.
     """
-    print("Установка расширения VSCode для подсветки синтаксиса .desc файлов...")
+    print("Установка расширения VSCode и Cursor для подсветки синтаксиса .desc файлов...")
     
     if install_extension():
         print("Установка завершена успешно.")

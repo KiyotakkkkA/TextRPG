@@ -150,5 +150,13 @@ class Require(ABC):
         Returns:
             bool: True, если у игрока есть навык с требуемым уровнем, иначе False
         """
-        # Механика навыков пока не реализована
-        pass 
+        # Проверяем наличие навыка у игрока
+        for skill_id, required_level in req_data.items():
+            # Получаем навык игрока
+            skill = player.get_skill(skill_id)
+            
+            # Если навыка нет или его уровень меньше требуемого
+            if skill is None or skill.level < required_level:
+                return False
+                
+        return True 

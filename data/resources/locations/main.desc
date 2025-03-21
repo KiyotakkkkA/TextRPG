@@ -13,33 +13,21 @@ LOCATION forest {
             respawn_time: 120
             required_tool: null
         }
-        RESOURCE wolf_bane {
+        RESOURCE lom {
             min_amount: 1
-            max_amount: 3
-            respawn_time: 180
-            required_tool: null
-        }
-        RESOURCE air_essence {
-            min_amount: 1
-            max_amount: 2
-            respawn_time: 300
-            required_tool: null
-        }
-        RESOURCE hypericum {
-            min_amount: 0
             max_amount: 1
             respawn_time: 240
             required_tool: null
         }
-        RESOURCE lom {
-            min_amount: 0
+        RESOURCE life_flower {
+            min_amount: 1
             max_amount: 1
             respawn_time: 240
             required_tool: null
         }
     }
     CONNECTIONS {
-        CONNECTION river_path {
+        CONNECTION river_path { 
             id: "river"
             name: "Река"
             condition: null
@@ -47,6 +35,11 @@ LOCATION forest {
         CONNECTION desert_path {
             id: "desert"
             name: "Пустыня"
+            condition: null
+        }
+        CONNECTION beach_path {
+            id: "beach"
+            name: "Берег"
             condition: null
         }
     }
@@ -60,6 +53,12 @@ LOCATION river {
     region_id: "forest_region"
     region_x: 0
     region_y: 1
+
+
+    REQUIRES {
+        player_has_level: 3
+    }
+
     RESOURCES {
         RESOURCE luhomir {
             min_amount: 2
@@ -68,6 +67,33 @@ LOCATION river {
             required_tool: null
         }
     }
+    CONNECTIONS {
+        CONNECTION forest_path {
+            id: "forest"
+            name: "Лес"
+            condition: null
+        }
+    }
+}
+
+LOCATION beach {
+    name: "Берег"
+    description: "Берег с красивым видом на море."
+    type: wilderness
+    color: blue
+    region_id: "forest_region"
+    region_x: 0
+    region_y: 1
+
+    REQUIRES {
+        REQ_SKILL mining {
+            level: 3
+        }
+        REQ_SKILL fishing {
+            level: 3
+        }
+    }
+
     CONNECTIONS {
         CONNECTION forest_path {
             id: "forest"
@@ -87,7 +113,10 @@ LOCATION desert {
     region_y: 1
 
     REQUIRES {
-        player_has_level: 3
+        REQ_ITEM luhomir {
+            amount: 1
+        }
+
     }
     
     RESOURCES {

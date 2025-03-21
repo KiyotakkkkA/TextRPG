@@ -4,6 +4,26 @@ ITEM luhomir {
     type: material
     icon: "🌿"
     rarity: "RARE"
+
+    IMPROVES {
+        IMPROVES_SKILL herbalism {
+            exp: 100
+        }
+    }
+}
+
+ITEM life_flower {
+    name: "Цветок жизни"
+    description: "Цветок жизни - легендарный ингредиент встречающийся в легендах и мифах."
+    type: material
+    icon: "🌸"
+    rarity: "LEGENDARY"
+    
+    REQUIRES {
+        REQ_SKILL herbalism {
+            level: 2
+        }
+    }
 }
 
 ITEM lom {
@@ -12,4 +32,11 @@ ITEM lom {
     type: material
     icon: "🪓"
     rarity: "LEGENDARY"
+
+    IMPROVES {
+        IMPROVES_SKILL mining {
+            exp: 110
+            
+        }
+    }
 }

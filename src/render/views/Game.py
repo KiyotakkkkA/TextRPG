@@ -23,23 +23,55 @@ class GameScreen(Screen):
         self.show_global_map = False  # Флаг для отображения глобальной карты регионов
         self.map_initialized = False  # Флаг, указывающий, была ли карта уже проинициализирована
         
+        # Состояние для навигации по навыкам
+        self.skills_focus = "groups"  # Какая панель в фокусе: "groups" или "skills"
+        self.selected_skill_index = 0  # Индекс выбранного навыка
+        self.active_skill_items = []  # Список активных навыков в текущей группе
+        
+        # Управление фокусом для меню
+        self.active_menu = None  # Текущее активное меню
+        
+        # Информация о последнем собранном предмете и полученном опыте
+        self.last_collected_item = None
+        self.last_skill_improvement = None
+        
         self.setup_ui()
         self._fix_flex_panel()  # Добавляем метод set_content к FlexPanel
     
     def set_game_system(self, game_system):
         """
-        Устанавливает ссылку на игровую систему.
+        Устанавливает игровую систему и обновляет интерфейс.
         
         Args:
-            game_system: Экземпляр GameSystem
+            game_system: Игровая система
         """
         self.game_system = game_system
-        self.update_location_info()
+        
+        # Подключаемся к событиям игровой системы
+        self.game_system.event_system.subscribe("player_moved_to_location", self.on_move_to_location)
+        self.game_system.event_system.subscribe("player_collected_resource", self.on_collect_resource)
+        self.game_system.event_system.subscribe("player_took_item", self.on_player_took_item)
+        
+        # Подписываемся на события, связанные с навыками
+        self.game_system.event_system.subscribe("player_unlocked_skill", lambda skill_data: self.update_skills_info())
+        self.game_system.event_system.subscribe("player_skill_levelup", lambda skill_data: self.update_skills_info())
+        self.game_system.event_system.subscribe("player_used_skill", lambda skill_data: self.update_skills_info())
+        
+        # Подписываемся на события, связанные с игроком
+        self.game_system.event_system.subscribe("player_level_up", lambda event_data: self.update_ui())
+        self.game_system.event_system.subscribe("skill_level_up", lambda event_data: self.update_ui())
+        
+        # Обновляем интерфейс
+        self.update_ui()
+        
+        # Обновляем действия
         self.update_actions()
         
-        # Инициализируем карту при первой установке системы
-        if self.game_system.get_current_location():
-            self._draw_location_map(self.game_system.get_current_location())
+        # Обновляем информацию о навыках
+        self.update_skills_info()
+        
+        # Отображаем информацию о текущей локации
+        self.update_location_info()
     
     def setup_ui(self):
         """
@@ -95,8 +127,8 @@ class GameScreen(Screen):
         self.add_child(content_panel)
         
         # Создаем вкладки для основного контента
-        self.tabs = ["Описание", "Персонажи", "Карта"]
-        self.tab_keys = [49, 50, 51]  # Коды клавиш '1', '2', '3' для быстрого доступа
+        self.tabs = ["Описание", "Персонажи", "Карта", "Навыки"]
+        self.tab_keys = [49, 50, 51, 52]  # Коды клавиш '1', '2', '3', '4' для быстрого доступа
         self.current_tab = 0
         
         # Рисуем вкладки
@@ -143,6 +175,74 @@ class GameScreen(Screen):
         self.map_panel.visible = False
         self.add_child(self.map_panel)
         
+        # Панель навыков (скрыта изначально)
+        self.skills_panel = FlexPanel(
+            description_x, description_y, 
+            description_width, description_height,
+            "minimal", "", 1
+        )
+        self.skills_panel.visible = False
+        self.add_child(self.skills_panel)
+        
+        # Создаем панель для групп навыков (слева)
+        self.skills_groups_panel = Panel(
+            description_x, description_y,
+            description_width // 3, description_height,
+            "Группы навыков", True, Color.BRIGHT_BLUE, "", Color.BRIGHT_WHITE,
+            active_border_color=Color.BRIGHT_YELLOW  # Добавляем активный цвет границы
+        )
+        self.skills_groups_panel.visible = False
+        self.add_child(self.skills_groups_panel)
+        
+        # Создаем меню для групп навыков
+        self.skills_groups_menu = Menu(
+            description_x + 2, description_y + 2,
+            description_width // 3 - 4, [],
+            "", False,
+            Color.WHITE, Color.BRIGHT_WHITE,
+            Color.BRIGHT_BLACK, "",
+            "", Color.BRIGHT_WHITE
+        )
+        self.skills_groups_menu.visible = False
+        self.add_child(self.skills_groups_menu)
+        
+        # Привязываем меню групп навыков к его панели
+        self.skills_groups_panel.set_bind_for(self.skills_groups_menu)
+        
+        # Создаем панель для детальной информации о навыке (справа)
+        self.skills_details_panel = Panel(
+            description_x + description_width // 3 + 1, description_y,
+            description_width - description_width // 3 - 1, description_height,
+            "Информация о навыках", True, Color.BRIGHT_BLUE, "", Color.BRIGHT_WHITE,
+            active_border_color=Color.BRIGHT_YELLOW  # Добавляем активный цвет границы
+        )
+        self.skills_details_panel.visible = False
+        self.add_child(self.skills_details_panel)
+        
+        # Создаем меню для выбора конкретных навыков в группе
+        self.skills_list_menu = Menu(
+            description_x + description_width // 3 + 3, description_y + 2,
+            description_width - description_width // 3 - 6, [],
+            "", False,
+            Color.WHITE, Color.BRIGHT_WHITE,
+            Color.BRIGHT_BLACK, "",
+            "", Color.BRIGHT_WHITE
+        )
+        self.skills_list_menu.visible = False
+        self.add_child(self.skills_list_menu)
+        
+        # Привязываем меню списка навыков к панели деталей
+        self.skills_details_panel.set_bind_for(self.skills_list_menu)
+        
+        # Создаем RichText для отображения детальной информации о навыке
+        self.skills_details_text = RichText(
+            description_x + description_width // 3 + 3, description_y + 2,
+            description_width - description_width // 3 - 6, description_height - 4,
+            Color.WHITE
+        )
+        self.skills_details_text.visible = False
+        self.add_child(self.skills_details_text)
+        
         # Нижняя статусная панель
         status_panel = Panel(
             sidebar_width + 1, height - 3,  # Смещаем на 1 вверх 
@@ -152,15 +252,15 @@ class GameScreen(Screen):
         self.add_child(status_panel)
         
         # Подсказки для управления
-        hint_text = "↑/↓: Выбор действия | Tab: Переключение вкладок | Enter: Подтвердить | Esc: Назад"
+        hint_text = "↑/↓: Выбор действия | ←/→: Переключение панелей | Tab: Переключение вкладок | Enter: Подтвердить | Esc: Назад"
         # Поднимаем подсказку, чтобы она была внутри панели
         hint_label = Label(sidebar_width + 3, height - 2, hint_text, Color.BRIGHT_BLACK)
         self.add_child(hint_label)
         
         # ---- БОКОВАЯ ПАНЕЛЬ ----
         
-        # Доступные ресурсы
-        resources_label = Label(2, 4, "📦 Доступные ресурсы:", Color.YELLOW)
+        # Ресурсы на локации
+        resources_label = Label(2, 4, "📦 Ресурсы на локации:", Color.YELLOW)
         self.add_child(resources_label)
         
         # Создаем отдельную панель для ресурсов с четкими границами
@@ -198,11 +298,12 @@ class GameScreen(Screen):
         self.actions_panel = Panel(
             2, self.actions_base_y + 1, 
             sidebar_width - 4, self.actions_panel_height,
-            "", True, Color.BRIGHT_BLACK, "", Color.BRIGHT_WHITE
+            "", True, Color.BRIGHT_BLACK, "", Color.BRIGHT_WHITE,
+            active_border_color=Color.BRIGHT_YELLOW  # Добавляем активный цвет границы
         )
         self.add_child(self.actions_panel)
         
-        # Меню действий внутри панели
+        # Создаем меню действий внутри панели
         self.actions_menu = Menu(
             4, self.actions_base_y + 2, 
             sidebar_width - 8, [],
@@ -217,12 +318,12 @@ class GameScreen(Screen):
         # Начальное значение, которое будет обновляться
         self.player_status_base_y = self.actions_base_y + self.actions_panel_height + 2
         
-        player_status_label = Label(2, self.player_status_base_y, "👤 Статус игрока:", Color.BRIGHT_MAGENTA)
+        player_status_label = Label(2, self.player_status_base_y, "👤 Статус игрока:", Color.YELLOW)
         self.player_status_label = player_status_label
         self.add_child(player_status_label)
         
         # Панель статуса
-        status_panel_height = 7
+        status_panel_height = 8
         self.player_status_panel = Panel(
             2, self.player_status_base_y + 1, 
             sidebar_width - 4, status_panel_height,
@@ -230,35 +331,40 @@ class GameScreen(Screen):
         )
         self.add_child(self.player_status_panel)
         
-        # Здоровье
-        self.health_label = Label(4, self.player_status_base_y + 2, "❤️ Здоровье:", Color.BRIGHT_RED)
+        # Информация о здоровье, мане, выносливости и опыте игрока
+        health_bar_width = 30
+        
+        # Цвета для разных статусов
+        self.health_label = Label(4, self.player_status_base_y + 2, "❤️ Здоровье:", Color.RED)
         self.add_child(self.health_label)
         
-        # Увеличиваем ширину прогресс-бара, чтобы лучше вместить информацию
-        health_bar_width = sidebar_width - 22
+        # Используем временные значения вместо обращения к self.game_system.player
         self.health_bar = ProgressBar(
             23, self.player_status_base_y + 2, health_bar_width, 
-            100, 100, Color.RED, Color.BLACK, True, Color.RED, False
+            100, 100, # Временные значения, будут обновлены в update_ui()
+            Color.RED, Color.BLACK, True, Color.RED, False
         )
         self.add_child(self.health_bar)
         
-        # Энергия
-        self.energy_label = Label(4, self.player_status_base_y + 3, "⚡ Выносливость:", Color.BRIGHT_GREEN)
-        self.add_child(self.energy_label)
+        # Выносливость
+        self.stamina_label = Label(4, self.player_status_base_y + 3, "⚡ Выносливость:", Color.BRIGHT_GREEN)
+        self.add_child(self.stamina_label)
         
-        self.energy_bar = ProgressBar(
+        self.stamina_bar = ProgressBar(
             23, self.player_status_base_y + 3, health_bar_width, 
-            100, 100, Color.BRIGHT_GREEN, Color.BLACK, True, Color.BRIGHT_GREEN, False
+            100, 100, # Временные значения, будут обновлены в update_ui()
+            Color.BRIGHT_GREEN, Color.BLACK, True, Color.BRIGHT_GREEN, False
         )
-        self.add_child(self.energy_bar)
+        self.add_child(self.stamina_bar)
         
         # Мана
-        self.mana_label = Label(4, self.player_status_base_y + 4, "💙 Мана:", Color.BRIGHT_BLUE)
+        self.mana_label = Label(4, self.player_status_base_y + 4, "💧 Мана:", Color.BRIGHT_BLUE)
         self.add_child(self.mana_label)
         
         self.mana_bar = ProgressBar(
             23, self.player_status_base_y + 4, health_bar_width, 
-            100, 100, Color.BRIGHT_BLUE, Color.BLACK, True, Color.BRIGHT_BLUE, False
+            100, 100, # Временные значения, будут обновлены в update_ui()
+            Color.BRIGHT_BLUE, Color.BLACK, True, Color.BRIGHT_BLUE, False
         )
         self.add_child(self.mana_bar)
         
@@ -272,8 +378,42 @@ class GameScreen(Screen):
         )
         self.add_child(self.exp_bar)
         
+        self.space_label = Label(4, self.player_status_base_y + 6, " ", Color.YELLOW)
+        self.add_child(self.space_label)
+        self.level_label = Label(4, self.player_status_base_y + 7, "🏆 Уровень:", Color.YELLOW)
+        self.add_child(self.level_label)
+        
+        # Панель последнего действия сбора ресурсов (добавление новой панели)
+        # Добавляем дополнительную пустую строку для разделения (увеличиваем отступ)
+        self.last_action_base_y = self.player_status_base_y + status_panel_height + 4  # Увеличиваем отступ на 1
+        self.last_action_label = Label(2, self.last_action_base_y, "📝 Последнее действие:", Color.YELLOW)
+        self.add_child(self.last_action_label)
+        
+        # Панель последнего действия
+        last_action_panel_height = 4
+        self.last_action_panel = Panel(
+            2, self.last_action_base_y + 1, 
+            sidebar_width - 4, last_action_panel_height,
+            "", True, Color.BRIGHT_BLACK, "", Color.BRIGHT_WHITE
+        )
+        self.add_child(self.last_action_panel)
+        
+        # Текст последнего действия
+        self.last_action_text = RichText(
+            4, self.last_action_base_y + 2, 
+            sidebar_width - 8, 2,
+            Color.WHITE
+        )
+        self.add_child(self.last_action_text)
+        
         # Инициализируем активную вкладку
         self.switch_tab(0, force=True)
+        
+        # После создания всех меню, устанавливаем начальный фокус
+        self.actions_menu.setFocused(True)
+        self.skills_groups_menu.setFocused(False)
+        self.skills_list_menu.setFocused(False)
+        self.active_menu = self.actions_menu
     
     def _update_ui_positions(self):
         """
@@ -295,12 +435,21 @@ class GameScreen(Screen):
         # Обновляем позицию всех элементов статуса
         self.health_label.y = self.player_status_base_y + 2
         self.health_bar.y = self.player_status_base_y + 2
-        self.energy_label.y = self.player_status_base_y + 3
-        self.energy_bar.y = self.player_status_base_y + 3
+        self.stamina_label.y = self.player_status_base_y + 3
+        self.stamina_bar.y = self.player_status_base_y + 3
         self.mana_label.y = self.player_status_base_y + 4
         self.mana_bar.y = self.player_status_base_y + 4
         self.exp_label.y = self.player_status_base_y + 5
         self.exp_bar.y = self.player_status_base_y + 5
+        self.space_label.y = self.player_status_base_y + 6
+        self.level_label.y = self.player_status_base_y + 7
+        
+        # Обновляем позицию панели последнего действия
+        status_panel_height = 7
+        self.last_action_base_y = self.player_status_base_y + status_panel_height + 3
+        self.last_action_label.y = self.last_action_base_y
+        self.last_action_panel.y = self.last_action_base_y + 1
+        self.last_action_text.y = self.last_action_base_y + 2
     
     def _update_tab_labels(self):
         """
@@ -320,18 +469,15 @@ class GameScreen(Screen):
         
         Args:
             direction (int): 1 для перехода вправо, -1 для перехода влево
-            force (bool): Если True, переключает на заданный индекс вкладки без сдвига
+            force (bool): Принудительное переключение, даже если вкладка не изменилась
         """
         old_tab = self.current_tab
+        num_tabs = len(self.tabs)
         
-        if force:
-            # В режиме force направление трактуется как индекс вкладки
-            new_tab = direction if 0 <= direction < len(self.tabs) else 0
-        else:
-            # Обычное переключение со сдвигом
-            new_tab = (self.current_tab + direction) % len(self.tabs)
+        # Вычисляем новую вкладку
+        new_tab = (self.current_tab + direction) % num_tabs
         
-        # Если вкладка не изменилась, ничего не делаем
+        # Если вкладка не изменилась и не требуется принудительное переключение, выходим
         if old_tab == new_tab and not force:
             return
         
@@ -340,6 +486,19 @@ class GameScreen(Screen):
             self.description_text.visible = False
         elif old_tab == 1:
             self.characters_text.visible = False
+        elif old_tab == 2:
+            self.map_panel.visible = False
+        elif old_tab == 3:
+            self.skills_panel.visible = False
+            self.skills_groups_panel.visible = False
+            self.skills_groups_menu.visible = False
+            self.skills_details_panel.visible = False
+            self.skills_details_text.visible = False
+            self.skills_list_menu.visible = False
+            
+            # Сбрасываем фокус для меню навыков
+            self.skills_groups_menu.setFocused(False)
+            self.skills_list_menu.setFocused(False)
         
         # Устанавливаем новую активную вкладку
         self.current_tab = new_tab
@@ -347,8 +506,44 @@ class GameScreen(Screen):
         # Показываем новую вкладку
         if new_tab == 0:
             self.description_text.visible = True
+            # Активируем меню действий
+            self.active_menu = self.actions_menu
+            self.actions_menu.setFocused(True)
         elif new_tab == 1:
             self.characters_text.visible = True
+            # Активируем меню действий
+            self.active_menu = self.actions_menu
+            self.actions_menu.setFocused(True)
+        elif new_tab == 2:
+            self.map_panel.visible = True
+            # Активируем меню действий
+            self.active_menu = self.actions_menu
+            self.actions_menu.setFocused(True)
+            if not self.map_initialized:
+                self._draw_location_map(self.game_system.get_current_location())
+        elif new_tab == 3:
+            self.skills_panel.visible = True
+            self.skills_groups_panel.visible = True
+            self.skills_groups_menu.visible = True
+            self.skills_details_panel.visible = True
+            
+            # Устанавливаем начальное состояние для вкладки навыков
+            if self.skills_focus == "groups":
+                # При первом переключении скрываем детали навыков и показываем меню групп
+                self.skills_list_menu.visible = False
+                self.skills_details_text.visible = True
+                self.skills_groups_menu.setFocused(True)
+                self.skills_list_menu.setFocused(False)
+                self.active_menu = self.skills_groups_menu
+            else:
+                self.skills_list_menu.visible = True
+                self.skills_details_text.visible = False
+                self.skills_groups_menu.setFocused(False)
+                self.skills_list_menu.setFocused(True)
+                self.active_menu = self.skills_list_menu
+            
+            # Обновляем информацию о навыках
+            self.update_skills_info()
         
         # Обновляем внешний вид вкладок
         self._update_tab_labels()
@@ -430,6 +625,17 @@ class GameScreen(Screen):
                         elif "player_has_completed_quest" in target_location.requires:
                             quest_id = target_location.requires["player_has_completed_quest"]
                             reason = f"[нужно завершить квест: {quest_id}]"
+                        elif "player_has_skill_level" in target_location.requires:
+                            skill_id = target_location.requires["player_has_skill_level"]
+                            answer = f"[нужно достичь"
+                            count = 0
+                            for key in skill_id:
+                                answer += f' уровня {skill_id[key]} навыка "{self.game_system.get_skill(key).name}"'
+                                count += 1
+                                if count > 0 and count < len(skill_id):
+                                    answer += " И"
+                            answer += "]"
+                            reason = answer
                         else:
                             reason = "[недоступно]"
                     else:
@@ -502,28 +708,87 @@ class GameScreen(Screen):
                     elif rarity == "LEGENDARY":
                         resource_color = Color.BRIGHT_YELLOW
                     
-                    # Если количество больше нуля, отображаем обычным способом
+                    # Проверяем требования для ресурса, если они есть
+                    can_collect = True
+                    requirement_text = ""
+                    if "requires" in item_data:
+                        can_collect = location.check_requirements(item_data["requires"], self.game_system.player, self.game_system)
+                        
+                        # Формируем текст требований если они не выполнены
+                        if not can_collect:
+                            requires = item_data["requires"]
+                            
+                            # Проверяем требование к уровню игрока
+                            if "player_has_level" in requires:
+                                required_level = requires["player_has_level"]
+                                player_level = self.game_system.player.level
+                                if player_level < required_level:
+                                    requirement_text = f"[Требуется уровень: {required_level}]"
+                            
+                            # Проверяем требования к предметам
+                            elif "player_has_items" in requires:
+                                items_needed = []
+                                for item_id, count in requires["player_has_items"].items():
+                                    item_data = self.game_system.get_item(item_id)
+                                    item_name = item_data.get("name", item_id) if item_data else item_id
+                                    items_needed.append(f"{item_name} x{count}")
+                                requirement_text = f"- [{', '.join(items_needed)}]"
+                            
+                            # Проверяем требование к золоту
+                            elif "player_has_gold" in requires:
+                                gold_needed = requires["player_has_gold"]
+                                requirement_text = f"- [Золото: {gold_needed}]"
+                                
+                            # Проверяем требование к завершенным квестам
+                            elif "player_has_completed_quest" in requires:
+                                quest_id = requires["player_has_completed_quest"]
+                                requirement_text = f"- [Квест: {quest_id}]"
+                                
+                            # Проверяем требования к навыкам
+                            elif "player_has_skill_level" in requires:
+                                skill_reqs = []
+                                for skill_id, required_level in requires["player_has_skill_level"].items():
+                                    skill = self.game_system.get_skill(skill_id)
+                                    skill_name = skill.name if skill else skill_id
+                                    skill_reqs.append(f"{skill_name} ур. {required_level}")
+                                requirement_text = f"- [{', '.join(skill_reqs)}]"
+                                
+                            # Если не определено конкретное требование
+                            elif not requirement_text:
+                                requirement_text = "- [Недоступно]"
+                    
+                    # Если количество больше нуля, отображаем в зависимости от доступности
                     if amount > 0:
                         has_available_resources = True
-                        self.resources_text.add_text(f"{resource_name}", resource_color, new_line=True)
-                        self.resources_text.add_text(f" × ", Color.WHITE, new_line=False)
-                        self.resources_text.add_text(f"{amount}", Color.BRIGHT_YELLOW, new_line=False)
+                        
+                        if can_collect:
+                            # Ресурс доступен для сбора
+                            self.resources_text.add_text(f"{resource_name}", resource_color, new_line=True)
+                            self.resources_text.add_text(f" × ", Color.WHITE, new_line=False)
+                            self.resources_text.add_text(f"{amount}", Color.BRIGHT_YELLOW, new_line=False)
+                        else:
+                            # Ресурс недоступен из-за требований
+                            self.resources_text.add_text(f"{resource_name}", Color.BRIGHT_BLACK, new_line=True)
+                            self.resources_text.add_text(f" × ", Color.WHITE, new_line=False)
+                            self.resources_text.add_text(f"{amount}", Color.BRIGHT_BLACK, new_line=False)
+                            self.resources_text.add_text("", Color.WHITE, new_line=True)
+                            self.resources_text.add_text(requirement_text, Color.BRIGHT_RED, new_line=False)
                     else:
                         # Если количество равно нулю, показываем как "исчерпан"
                         self.resources_text.add_text(f"{resource_name}", Color.BRIGHT_BLACK, new_line=True)
                         self.resources_text.add_text(f" - ", Color.WHITE, new_line=False)
                         self.resources_text.add_text("исчерпан", Color.BRIGHT_BLACK, new_line=False)
                     
-                    # Каждый ресурс занимает одну строку
-                    resource_lines += 1
+                    # Каждый ресурс занимает две строки: сам ресурс и пустая строка после него
+                    resource_lines += 2
             
             # Если нет доступных ресурсов вообще, показываем сообщение
             if not has_available_resources:
                 self.resources_text.clear()
-                self.resources_text.add_text("Нет доступных ресурсов на локации", Color.BRIGHT_BLACK)
+                self.resources_text.add_text("Нет ресурсов на локации", Color.BRIGHT_BLACK)
                 resource_lines = 1
         else:
-            self.resources_text.add_text("Нет доступных ресурсов на локации", Color.BRIGHT_BLACK)
+            self.resources_text.add_text("Нет ресурсов на локации", Color.BRIGHT_BLACK)
             resource_lines = 1
         
         # Обновляем высоту панели ресурсов в зависимости от их количества
@@ -625,14 +890,80 @@ class GameScreen(Screen):
                 def create_collect_action(res_id):
                     return lambda: self.on_collect_resource(res_id)
                 
+                # Проверяем требования для ресурса, если они есть
+                can_collect = True
+                requirement_text = ""
+                if "requires" in item_data:
+                    can_collect = location.check_requirements(item_data["requires"], self.game_system.player, self.game_system)
+                    
+                    # Если требования не выполнены, формируем текст требований
+                    if not can_collect:
+                        requires = item_data["requires"]
+                        
+                        # Проверяем требование к уровню игрока
+                        if "player_has_level" in requires:
+                            required_level = requires["player_has_level"]
+                            player_level = self.game_system.player.level
+                            if player_level < required_level:
+                                requirement_text = f"Требуется уровень: {required_level}"
+                        
+                        # Проверяем требования к предметам
+                        elif "player_has_items" in requires:
+                            items_needed = []
+                            for item_id, count in requires["player_has_items"].items():
+                                item_data = self.game_system.get_item(item_id)
+                                item_name = item_data.get("name", item_id) if item_data else item_id
+                                items_needed.append(f"{item_name} x{count}")
+                            requirement_text = f"Требуются: {', '.join(items_needed)}"
+                        
+                        # Проверяем требование к золоту
+                        elif "player_has_gold" in requires:
+                            gold_needed = requires["player_has_gold"]
+                            requirement_text = f"Требуется золото: {gold_needed}"
+                            
+                        # Проверяем требование к завершенным квестам
+                        elif "player_has_completed_quest" in requires:
+                            quest_id = requires["player_has_completed_quest"]
+                            requirement_text = f"Требуется квест: {quest_id}"
+                            
+                        # Проверяем требования к навыкам
+                        elif "player_has_skill_level" in requires:
+                            skill_reqs = []
+                            for skill_id, required_level in requires["player_has_skill_level"].items():
+                                skill = self.game_system.get_skill(skill_id)
+                                skill_name = skill.name if skill else skill_id
+                                skill_reqs.append(f"{skill_name} ур. {required_level}")
+                            requirement_text = f"Требуется: {', '.join(skill_reqs)}"
+                            
+                        # Проверяем требования к навыкам в формате REQ_SKILL
+                        elif "REQ_SKILL" in requires:
+                            skill_reqs = []
+                            for skill_id, skill_req in requires["REQ_SKILL"].items():
+                                skill_level = skill_req.get("level", 1)
+                                skill = self.game_system.get_skill(skill_id)
+                                skill_name = skill.name if skill else skill_id
+                                skill_reqs.append(f"{skill_name} ур. {skill_level}")
+                            requirement_text = f"Требуется: {', '.join(skill_reqs)}"
+                            
+                        # Если не определено конкретное требование
+                        elif not requirement_text:
+                            requirement_text = "Недоступно"
+                
+                # Определяем цвет текста в зависимости от доступности
+                resource_name_color = resource_color if can_collect else Color.BRIGHT_BLACK
+                
+                # Создаем текстовые части для отображения
+                text_parts = [
+                    {"text": "Добыть: ", "color": Color.WHITE},
+                    {"text": resource_name, "color": resource_name_color}
+                ]
+                
                 # Добавляем пункт меню для сбора ресурса
                 items.append(MenuItem(
                     f"Добыть: {resource_name}",
-                    create_collect_action(resource_id),
-                    text_parts=[
-                        {"text": "Добыть: ", "color": Color.WHITE},
-                        {"text": resource_name, "color": resource_color}
-                    ]
+                    create_collect_action(resource_id) if can_collect else None,
+                    enabled=can_collect,
+                    text_parts=text_parts
                 ))
         
         # Добавляем разделитель между ресурсами и персонажами, если есть хотя бы один ресурс
@@ -641,30 +972,33 @@ class GameScreen(Screen):
         
         # Добавляем действия диалога с персонажами
         has_characters = False
-        for character in location.characters:
-            has_characters = True
-            
-            # Проверяем формат персонажа (словарь или строка)
-            if isinstance(character, dict):
-                character_id = character.get("id", "unknown")
-                character_name = character.get("name", character_id)
-            else:
-                character_id = str(character)
-                character_name = character_id
-            
-            # Создаем функцию для разговора с персонажем
-            def create_talk_action(char_id):
-                return lambda: self.on_talk_to_character(char_id)
-            
-            # Добавляем пункт меню для разговора
-            items.append(MenuItem(
-                f"Говорить с: {character_name}",
-                create_talk_action(character_id),
-                text_parts=[
-                    {"text": "Говорить с: ", "color": Color.WHITE},
-                    {"text": character_name, "color": Color.BRIGHT_CYAN}
-                ]
-            ))
+        
+        # Проверяем наличие персонажей в локации
+        if hasattr(location, 'characters') and location.characters:
+            for character in location.characters:
+                has_characters = True
+                
+                # Проверяем формат персонажа (словарь или строка)
+                if isinstance(character, dict):
+                    character_id = character.get("id", "unknown")
+                    character_name = character.get("name", character_id)
+                else:
+                    character_id = str(character)
+                    character_name = character_id
+                
+                # Создаем функцию для разговора с персонажем
+                def create_talk_action(char_id):
+                    return lambda: self.on_talk_to_character(char_id)
+                
+                # Добавляем пункт меню для разговора
+                items.append(MenuItem(
+                    f"Говорить с: {character_name}",
+                    create_talk_action(character_id),
+                    text_parts=[
+                        {"text": "Говорить с: ", "color": Color.WHITE},
+                        {"text": character_name, "color": Color.BRIGHT_CYAN}
+                    ]
+                ))
         
         # Добавляем разделитель между персонажами и стандартными действиями, если есть хотя бы один персонаж
         if has_characters:
@@ -802,51 +1136,102 @@ class GameScreen(Screen):
     
     def handle_input(self, key: int) -> bool:
         """
-        Обрабатывает ввод с клавиатуры.
-        Возвращает True, если ввод был обработан и требуется перерисовка.
+        Обрабатывает ввод для игрового экрана.
+        
+        Args:
+            key (int): Код нажатой клавиши
+            
+        Returns:
+            bool: True, если ввод был обработан
         """
-        # Проверяем горячие клавиши для вкладок
+        # Обрабатываем выход из игры
+        if key == Keys.ESCAPE:
+            self.engine.set_current_screen("main_menu")
+            return True
+            
+        # Обрабатываем переключение вкладок клавишей Tab
+        if key == Keys.TAB:
+            self.switch_tab(1)
+            return True
+            
+        # Обрабатываем быстрое переключение по цифрам
         if key in self.tab_keys:
             tab_index = self.tab_keys.index(key)
-            self.switch_tab(tab_index, True)  # True - указывает, что это прямой переход на вкладку
+            if tab_index != self.current_tab:
+                self.switch_tab(tab_index - self.current_tab)
             return True
             
-        # Проверяем регистронезависимые номера клавиш
-        # Для случая, когда указаны клавиши 1, 2, 3, но нажаты клавиши с Shift: !, @, #
-        # ASCII коды: 1=49, !=33 | 2=50, @=64 | 3=51, #=35
-        if key in [33, 64, 35]:  # Символы !, @, #
-            shift_key_mapping = {33: 49, 64: 50, 35: 51}  # Маппинг символов с Shift к обычным цифрам
-            normalized_key = shift_key_mapping[key]
-            if normalized_key in self.tab_keys:
-                tab_index = self.tab_keys.index(normalized_key)
-                self.switch_tab(tab_index, True)
+        # Обрабатываем навигацию в режиме навыков
+        if self.current_tab == 3:
+            # Переключение между панелями левой и правой с помощью стрелок влево/вправо
+            if Keys.is_left(key) and self.skills_focus == "skills":
+                # Переключаемся на левую панель (группы навыков)
+                self.skills_focus = "groups"
+                self.skills_list_menu.visible = False
+                self.skills_details_text.visible = True
+                
+                # Переключаем фокус
+                self.skills_groups_menu.setFocused(True)
+                self.skills_list_menu.setFocused(False)
+                self.active_menu = self.skills_groups_menu
+                
+                self.needs_redraw = True
                 return True
             
-        # Переключение вкладок по Tab
-        if key == Keys.TAB:
-            self.switch_tab()
-            return True
+            if Keys.is_right(key) and self.skills_focus == "groups":
+                # Переключаемся на правую панель (список навыков)
+                self.skills_focus = "skills"
+                self.skills_list_menu.visible = True
+                self.skills_details_text.visible = False
+                
+                # Переключаем фокус
+                self.skills_groups_menu.setFocused(False)
+                self.skills_list_menu.setFocused(True)
+                self.active_menu = self.skills_list_menu
+                
+                self.update_skills_list()
+                self.needs_redraw = True
+                return True
         
-        # Убираем обработку переключения карты по нажатию G
-        
-        # Сначала пробуем обработать ввод с помощью меню действий
-        if self.actions_menu.handle_input(key):
+        # Обрабатываем ввод для текущего активного меню
+        if self.active_menu and self.active_menu.visible and self.active_menu.handle_input(key):
             self.needs_redraw = True
-            return True
-            
-        # Если меню не обработало ввод, обрабатываем его сами
-        if key == Keys.ESCAPE:
-            # Возвращаемся в главное меню
-            self.engine.set_current_screen("main_menu")
             return True
         
         return False
     
     def update_ui(self):
         """
-        Обновляет интерфейс. 
-        Функция карты временно отключена.
+        Обновляет все элементы интерфейса, такие как здоровье, опыт, золото и т.д.
         """
+        if not self.game_system:
+            return
+        
+        # Обновляем значения статуса игрока из объекта Player
+        player = self.game_system.player
+        
+        # Обновляем показатели здоровья
+        self.health_bar.set_value(player.current_health)
+        self.health_bar.max_value = player.max_health
+        
+        # Обновляем показатели выносливости
+        self.stamina_bar.set_value(player.current_stamina)
+        self.stamina_bar.max_value = player.max_stamina
+        
+        # Обновляем показатели маны
+        self.mana_bar.set_value(player.current_mana)
+        self.mana_bar.max_value = player.max_mana
+        
+        self.exp_bar.set_value(player.current_exp)
+        self.exp_bar.max_value = player.exp_for_level_up
+        
+        # Обновляем уровень игрока
+        self.level_label.set_text(f"🏆 Уровень: {player.level}")
+        
+        # Обновляем остальные UI элементы
+        self.update_location_info()
+        self.update_skills_info()
+        
         self.needs_redraw = True
     
     def update(self, dt: float):
@@ -901,27 +1286,145 @@ class GameScreen(Screen):
                 # Обновляем карту
                 self._draw_location_map(self.game_system.get_current_location())
     
-    def on_collect_resource(self, resource_id):
+    def on_player_took_item(self, item_data):
+        """
+        Обработчик события получения предмета игроком.
+        Используется для отслеживания улучшений навыков.
+        
+        Args:
+            item_data (dict): Данные предмета со счетчиком количества
+        """
+        if not self.game_system:
+            return
+        
+        # Сохраняем информацию о последнем собранном предмете
+        self.last_collected_item = item_data
+        
+        # Получаем полные данные о предмете
+        item_id = item_data.get("id")
+        count = item_data.get("count", 1)
+        
+        item_full_data = self.game_system.get_item(item_id)
+        if not item_full_data:
+            return
+        
+        # Проверяем наличие блока улучшений
+        improves = item_full_data.get("improves")
+        if not improves:
+            return
+        
+        # Получаем информацию об улучшении навыков
+        skill_improvements = improves.get("improves_skills", {})
+        
+        # Если есть улучшения навыков, обновляем панель последнего действия
+        if skill_improvements:
+            self.update_last_action_panel(item_full_data, count, skill_improvements)
+    
+    def update_last_action_panel(self, item_data, count, skill_improvements):
+        """
+        Обновляет панель последнего действия с информацией о собранном предмете и улучшении навыков.
+        
+        Args:
+            item_data (dict): Данные предмета
+            count (int): Количество собранных предметов
+            skill_improvements (dict): Словарь с улучшениями навыков (skill_id -> exp)
+        """
+        if not self.game_system:
+            return
+        
+        # Очищаем текст последнего действия
+        self.last_action_text.clear()
+        
+        # Получаем название предмета
+        item_name = item_data.get("name", "Неизвестный предмет")
+        
+        # Определяем цвет в зависимости от редкости
+        item_color = Color.WHITE
+        rarity = item_data.get("rarity", "COMMON").upper()
+        if rarity == "COMMON":
+            item_color = Color.WHITE
+        elif rarity == "UNCOMMON":
+            item_color = Color.BRIGHT_GREEN
+        elif rarity == "RARE":
+            item_color = Color.BRIGHT_BLUE
+        elif rarity == "EPIC":
+            item_color = Color.BRIGHT_MAGENTA
+        elif rarity == "LEGENDARY":
+            item_color = Color.BRIGHT_YELLOW
+        
+        # Добавляем информацию о собранном предмете
+        self.last_action_text.add_text("Собрано ", Color.WHITE, new_line=False)
+        self.last_action_text.add_text(item_name, item_color, new_line=False)
+        self.last_action_text.add_text(" x ", Color.WHITE, new_line=False)
+        self.last_action_text.add_text(str(count), Color.BRIGHT_YELLOW, new_line=False)
+        
+        # Для каждого улучшенного навыка добавляем информацию
+        for skill_id, exp_amount in skill_improvements.items():
+            # Получаем навык игрока
+            skill = self.game_system.player.get_skill(skill_id)
+            if skill:
+                skill_name = skill.name
+                # Общее количество опыта (exp_amount * count)
+                total_exp = exp_amount * count
+                
+                # Добавляем информацию о улучшении навыка
+                self.last_action_text.add_text(skill_name, Color.BRIGHT_GREEN, new_line=True)
+                self.last_action_text.add_text(" увеличено на ", Color.WHITE, new_line=False)
+                self.last_action_text.add_text(str(total_exp), Color.BRIGHT_YELLOW, new_line=False)
+                self.last_action_text.add_text(" опыта", Color.WHITE)
+    
+    def on_collect_resource(self, resource_id, resource_name=None, amount=0, location_id=None):
         """
         Обработчик сбора ресурса.
         
         Args:
-            resource_id (str): ID ресурса
+            resource_id (str, dict): ID ресурса или словарь с данными события
+            resource_name (str, optional): Название ресурса
+            amount (int, optional): Количество собранного ресурса
+            location_id (str, optional): ID локации, где был собран ресурс
         """
+        # Проверяем, получили ли мы данные в виде словаря (новый формат)
+        if isinstance(resource_id, dict):
+            event_data = resource_id
+            resource_id = event_data.get("resource_id")
+            resource_name = event_data.get("resource_name")
+            amount = event_data.get("amount", 0)
+            location_id = event_data.get("location_id")
+        
         if self.game_system:
-            collected = self.game_system.collect_resource(resource_id)
+            # Получаем данные о ресурсе
+            item_data = self.game_system.get_item(resource_id)
+            location = self.game_system.get_current_location()
+            
+            # Проверяем требования для ресурса, если они есть
+            if item_data and "requires" in item_data:
+                can_collect = location.check_requirements(item_data["requires"], self.game_system.player, self.game_system)
+                if not can_collect:
+                    # Если требования не выполнены, не собираем ресурс
+                    return
+            
+            # Передаём None в качестве количества, чтобы собрать всё доступное количество
+            collected = self.game_system.collect_resource(resource_id, None)
             if collected > 0:
                 # Ресурс собран, обновляем информацию
                 self.location_changed = True
                 self.actions_changed = True
                 self.needs_redraw = True
-                
+    
     def on_skills(self):
         """
-        Обработчик открытия навыков.
+        Обработчик нажатия на кнопку 'Навыки'.
+        Переключает на вкладку с навыками.
         """
-        print("Открытие навыков...")
-        # TODO: Реализовать экран навыков
+        # Получаем индекс вкладки "Навыки"
+        skills_tab_index = self.tabs.index("Навыки")
+        
+        # Если мы уже не на этой вкладке, переключаемся на неё
+        if self.current_tab != skills_tab_index:
+            self.switch_tab(skills_tab_index - self.current_tab)
+        
+        # Обновляем информацию о навыках
+        self.update_skills_info()
     
     def on_inventory(self):
         """
@@ -991,4 +1494,350 @@ class GameScreen(Screen):
         if current_line:
             lines.append(" ".join(current_line))
             
-        return lines 
+        return lines
+
+    def update_skills_info(self):
+        """
+        Обновляет информацию о навыках игрока и формирует меню групп навыков.
+        """
+        if not self.game_system:
+            return
+        
+        # Очищаем текст с деталями навыка
+        self.skills_details_text.clear()
+        
+        # Получаем все группы навыков в порядке отображения
+        groups = self.game_system.get_ordered_skill_groups()
+        if not groups:
+            self.skills_details_text.add_text("Нет доступных групп навыков", Color.BRIGHT_RED)
+            return
+        
+        # Формируем элементы меню для групп навыков
+        menu_items = []
+        for group in groups:
+            # Получаем навыки в этой группе
+            skills = self.game_system.get_skills_by_group(group.id)
+            # Считаем количество доступных игроку навыков в группе
+            player_skills = [skill for skill in skills if skill.id in self.game_system.player.skills]
+            
+            # Создаем элемент меню
+            menu_item_text = f"{group.icon} {group.name} ({len(player_skills)}/{len(skills)})"
+            
+            # Создаем функцию для отображения навыков группы
+            def make_select_group_action(group_id):
+                return lambda: self.show_group_skills(group_id)
+            
+            # Добавляем элемент в меню
+            menu_items.append(MenuItem(
+                menu_item_text,
+                make_select_group_action(group.id),
+                enabled=len(player_skills) > 0
+            ))
+        
+        # Обновляем меню групп
+        self.skills_groups_menu.items = menu_items
+        
+        # При первом переключении на вкладку навыков сбрасываем состояние
+        if self.current_tab == 3 and not self.skills_details_text.visible:
+            # Очищаем текст с деталями и скрываем список навыков
+            self.skills_details_text.clear()
+            self.skills_list_menu.visible = False
+            self.skills_details_text.visible = True
+        
+        # Если есть элементы, выбираем первый по умолчанию
+        if menu_items:
+            # Активируем первую доступную группу
+            for i, item in enumerate(menu_items):
+                if item.enabled:
+                    self.skills_groups_menu.selected_index = i
+                    # Если мы на вкладке навыков и в фокусе группы, активируем элемент
+                    if self.current_tab == 3 and self.skills_focus == "groups" and self.active_menu == self.skills_groups_menu:
+                        item.activate()
+                    break
+    
+    def show_group_skills(self, group_id):
+        """
+        Отображает навыки выбранной группы.
+        
+        Args:
+            group_id (str): ID группы навыков
+        """
+        if not self.game_system:
+            return
+            
+        # Получаем группу навыков
+        group = self.game_system.get_skill_group(group_id)
+        if not group:
+            self.skills_details_text.clear()
+            self.skills_details_text.add_text(f"Группа навыков с ID {group_id} не найдена", Color.BRIGHT_RED)
+            return
+            
+        # Устанавливаем режим фокуса на группы
+        self.skills_focus = "groups"
+        self.skills_groups_menu.setFocused(True)
+        self.skills_list_menu.setFocused(False)
+        self.active_menu = self.skills_groups_menu
+        
+        # Скрываем список навыков и показываем детали группы
+        self.skills_list_menu.visible = False
+        self.skills_details_text.visible = True
+        
+        # Очищаем текст с деталями
+        self.skills_details_text.clear()
+        
+        # Отображаем заголовок группы
+        self.skills_details_text.add_text(f"{group.icon} {group.name}", Color.BRIGHT_CYAN)
+        self.skills_details_text.add_text(group.description, Color.WHITE)
+        self.skills_details_text.add_text("", Color.WHITE)  # Пустая строка
+        
+        # Получаем навыки этой группы
+        skills = self.game_system.get_skills_by_group(group_id)
+        
+        # Сохраняем текущую выбранную группу
+        self.current_group_id = group_id
+        
+        # Обновляем список навыков для меню
+        self.update_skills_list()
+        
+        # Отображаем навыки
+        if not skills:
+            self.skills_details_text.add_text("В этой группе нет навыков", Color.BRIGHT_RED)
+            return
+            
+        # Отображаем каждый навык
+        for skill in skills:
+            # Проверяем, есть ли у игрока этот навык
+            player_skill = self.game_system.player.get_skill(skill.id)
+            
+            if player_skill:
+                # Отображаем навык, доступный игроку
+                skill_name = f"{skill.icon} {skill.name} [{player_skill.level}/{player_skill.max_level}]"
+                self.skills_details_text.add_text(skill_name, Color.BRIGHT_GREEN)
+                
+                # Отображаем прогресс навыка
+                progress_percent = player_skill.get_experience_percent() * 100
+                progress_bar = self._create_progress_bar(
+                    20, 
+                    progress_percent, 
+                    player_skill.current_experience, 
+                    player_skill.max_level_experience
+                )
+                progress_text = f"Прогресс: {progress_bar}"
+                self.skills_details_text.add_text(progress_text, Color.YELLOW)
+                
+                # Отображаем описание навыка
+                self.skills_details_text.add_text(skill.description, Color.WHITE)
+                
+                # Отображаем бонусы навыка, если они есть
+                passive_bonuses = player_skill.get_passive_bonuses()
+                if passive_bonuses:
+                    self.skills_details_text.add_text("Пассивные бонусы:", Color.BRIGHT_MAGENTA)
+                    for bonus_name, bonus_value in passive_bonuses.items():
+                        bonus_text = f"  • {bonus_name}: +{bonus_value}"
+                        self.skills_details_text.add_text(bonus_text, Color.MAGENTA)
+                
+                # Отображаем разблокированные способности, если они есть
+                unlocked_abilities = player_skill.get_unlocked_abilities()
+                if unlocked_abilities:
+                    self.skills_details_text.add_text("Разблокированные способности:", Color.BRIGHT_CYAN)
+                    for ability in unlocked_abilities:
+                        ability_text = f"  • {ability}"
+                        self.skills_details_text.add_text(ability_text, Color.CYAN)
+                        
+                # Добавляем пустую строку между навыками
+                self.skills_details_text.add_text("", Color.WHITE)
+            elif skill.is_unlocked(self.game_system.player.level):
+                # Навык доступен для изучения, но не изучен
+                skill_name = f"🔓 {skill.name} (Доступен)"
+                self.skills_details_text.add_text(skill_name, Color.BRIGHT_YELLOW)
+                self.skills_details_text.add_text(skill.description, Color.WHITE)
+                self.skills_details_text.add_text("", Color.WHITE)  # Пустая строка
+            else:
+                # Навык недоступен
+                skill_name = f"🔒 {skill.name} (Требуется уровень {skill.unlocked_at_level})"
+                self.skills_details_text.add_text(skill_name, Color.BRIGHT_BLACK)
+                self.skills_details_text.add_text("", Color.WHITE)  # Пустая строка
+    
+    def update_skills_list(self):
+        """
+        Обновляет список навыков для конкретной группы в меню выбора.
+        """
+        if not hasattr(self, 'current_group_id') or not self.game_system:
+            return
+        
+        # Получаем навыки текущей группы
+        skills = self.game_system.get_skills_by_group(self.current_group_id)
+        
+        # Формируем элементы меню для навыков
+        menu_items = []
+        self.active_skill_items = []
+        
+        for skill in skills:
+            # Проверяем, есть ли у игрока этот навык
+            player_skill = self.game_system.player.get_skill(skill.id)
+            
+            # Создаем функцию для отображения деталей навыка
+            def make_show_skill_action(skill_index):
+                return lambda: self.show_skill_details(skill_index)
+            
+            if player_skill:
+                # Доступный навык
+                skill_name = f"{skill.icon} {skill.name} [{player_skill.level}/{player_skill.max_level}]"
+                menu_color = Color.BRIGHT_GREEN
+                enabled = True
+                self.active_skill_items.append(skill)
+            elif skill.is_unlocked(self.game_system.player.level):
+                # Навык доступен, но не изучен
+                skill_name = f"🔓 {skill.name}"
+                menu_color = Color.BRIGHT_YELLOW
+                enabled = False
+            else:
+                # Навык недоступен
+                skill_name = f"🔒 {skill.name}"
+                menu_color = Color.BRIGHT_BLACK
+                enabled = False
+            
+            # Добавляем элемент в меню
+            menu_items.append(MenuItem(
+                skill_name,
+                make_show_skill_action(len(self.active_skill_items) - 1) if enabled else None,
+                enabled=enabled,
+                text_parts=[{"text": skill_name, "color": menu_color}]
+            ))
+        
+        # Обновляем меню навыков
+        self.skills_list_menu.items = menu_items
+        
+        # Если есть активные элементы, выбираем первый по умолчанию
+        if self.active_skill_items:
+            # Находим первый активный навык
+            for i, item in enumerate(menu_items):
+                if item.enabled:
+                    self.skills_list_menu.selected_index = i
+                    self.selected_skill_index = 0  # Первый активный навык
+                    break
+
+    def show_skill_details(self, skill_index):
+        """
+        Показывает детальную информацию о выбранном навыке.
+        
+        Args:
+            skill_index (int): Индекс навыка в списке активных навыков
+        """
+        # Сохраняем выбранный индекс
+        self.selected_skill_index = skill_index
+        
+        # Если нет активных навыков, выходим
+        if not self.active_skill_items or skill_index >= len(self.active_skill_items):
+            return
+            
+        # Получаем выбранный навык
+        skill = self.active_skill_items[skill_index]
+        
+        # Получаем навык игрока
+        player_skill = self.game_system.player.get_skill(skill.id)
+        if not player_skill:
+            return
+            
+        # Очищаем панель с деталями
+        self.skills_details_text.clear()
+        
+        # Отображаем заголовок навыка
+        skill_name = f"{skill.icon} {skill.name} [{player_skill.level}/{player_skill.max_level}]"
+        self.skills_details_text.add_text(skill_name, Color.BRIGHT_CYAN)
+        
+        # Отображаем прогресс навыка
+        progress_percent = player_skill.get_experience_percent() * 100
+        progress_bar = self._create_progress_bar(
+            30, 
+            progress_percent, 
+            player_skill.current_experience, 
+            player_skill.max_level_experience
+        )
+        progress_text = f"Прогресс: {progress_bar}"
+        self.skills_details_text.add_text(progress_text, Color.YELLOW)
+        
+        # Отображаем описание навыка
+        self.skills_details_text.add_text(skill.description, Color.WHITE)
+        
+        # Отображаем информацию о разблокировке
+        if hasattr(skill, 'unlocked_at_level'):
+            unlock_text = f"Разблокируется на уровне игрока: {skill.unlocked_at_level}"
+            self.skills_details_text.add_text(unlock_text, Color.BRIGHT_CYAN)
+        
+        # Отображаем пассивные бонусы
+        passive_bonuses = player_skill.get_passive_bonuses()
+        if passive_bonuses:
+            self.skills_details_text.add_text("", Color.WHITE)  # Пустая строка
+            self.skills_details_text.add_text("Пассивные бонусы:", Color.BRIGHT_MAGENTA)
+            for bonus_name, bonus_value in passive_bonuses.items():
+                bonus_text = f"  • {bonus_name}: +{bonus_value}"
+                self.skills_details_text.add_text(bonus_text, Color.MAGENTA)
+        
+        # Отображаем разблокированные способности
+        unlocked_abilities = player_skill.get_unlocked_abilities()
+        if unlocked_abilities:
+            self.skills_details_text.add_text("", Color.WHITE)  # Пустая строка
+            self.skills_details_text.add_text("Разблокированные способности:", Color.BRIGHT_CYAN)
+            for ability in unlocked_abilities:
+                self.skills_details_text.add_text(f"  • {ability}", Color.CYAN)
+        
+        # Отображаем будущие улучшения
+        self.skills_details_text.add_text("", Color.WHITE)  # Пустая строка
+        self.skills_details_text.add_text("Будущие улучшения:", Color.BRIGHT_YELLOW)
+        
+        # Показываем бонусы на следующих уровнях
+        for level in range(player_skill.level + 1, player_skill.max_level + 1):
+            # Проверяем наличие пассивных бонусов на этом уровне
+            level_bonuses = player_skill.passive_bonuses.get(level, {})
+            # Проверяем наличие способностей на этом уровне
+            level_abilities = player_skill.unlocked_abilities.get(level, [])
+            
+            if level_bonuses or level_abilities:
+                self.skills_details_text.add_text(f"Уровень {level}:", Color.BRIGHT_YELLOW)
+                
+                # Отображаем пассивные бонусы этого уровня
+                if level_bonuses:
+                    for bonus_name, bonus_value in level_bonuses.items():
+                        self.skills_details_text.add_text(f"  • {bonus_name}: +{bonus_value}", Color.YELLOW)
+                
+                # Отображаем способности этого уровня
+                if level_abilities:
+                    for ability in level_abilities:
+                        self.skills_details_text.add_text(f"  • Способность: {ability}", Color.YELLOW)
+        
+        # Обновляем видимость и фокус
+        self.skills_details_text.visible = True
+        self.skills_list_menu.visible = True
+        
+        # Устанавливаем фокус на список навыков и переходим в режим выбора навыка
+        if self.skills_focus != "skills":
+            self.skills_focus = "skills"
+            self.skills_groups_menu.setFocused(False)
+            self.skills_list_menu.setFocused(True)
+            self.active_menu = self.skills_list_menu
+    
+    def _create_progress_bar(self, width, percent, current_exp=None, max_level_exp=None):
+        """
+        Создает текстовый прогресс-бар в виде 10 квадратов, где каждый квадрат представляет 10% прогресса.
+        
+        Args:
+            width (int): Этот параметр больше не используется, но сохранен для совместимости
+            percent (float): Процент заполнения (0.0 - 100.0)
+            current_exp (int, optional): Текущий опыт
+            max_level_exp (int, optional): Максимальный опыт для уровня
+            
+        Returns:
+            str: Текстовый прогресс-бар с квадратами и числовыми значениями
+        """
+        # Преобразуем процент в количество заполненных квадратов (от 0 до 10)
+        filled_squares = int(percent / 10)
+        
+        # Создаем строку с заполненными и пустыми квадратами
+        progress_squares = "■" * filled_squares + "□" * (10 - filled_squares)
+        
+        # Если предоставлены данные об опыте, добавляем их справа от квадратов
+        if current_exp is not None and max_level_exp is not None:
+            return f"{progress_squares} [{current_exp} / {max_level_exp}]"
+        else:
+            return progress_squares

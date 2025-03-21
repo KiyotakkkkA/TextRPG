@@ -19,7 +19,7 @@ class DescLoader:
         Инициализирует загрузчик .desc файлов.
         """
         # Регулярные выражения для различных элементов синтаксиса
-        self.entity_start_re = re.compile(r'^([A-Z]+)\s+([a-zA-Z0-9_]+)\s*{$')
+        self.entity_start_re = re.compile(r'^([A-Z_]+)\s+([a-zA-Z0-9_]+)\s*{$')
         self.property_re = re.compile(r'^([a-zA-Z0-9_]+):\s*(.+)$')
         self.block_start_re = re.compile(r'^([A-Z]+)\s*{$')
         self.block_end_re = re.compile(r'^}$')
@@ -86,8 +86,11 @@ class DescLoader:
         in_connections_block = False
         in_characters_block = False
         in_resources_block = False
-        in_requires_block = False  # Новый флаг для блока REQUIRES
+        in_requires_block = False  # Флаг для блока REQUIRES
+        in_improves_block = False  # Флаг для блока IMPROVES
         
+        # Счетчики для логирования
+        found_skill_improvements = 0
         
         while i < len(lines):
             line = lines[i].strip()
@@ -100,9 +103,12 @@ class DescLoader:
             # Проверяем начало сущности (LOCATION, ITEM и т.д.)
             entity_match = self.entity_start_re.match(line)
             if entity_match:
+                # Проверка на пустоту стека
+                if not stack:
+                    stack.append((result, None))  # Восстанавливаем стек если он пуст
+                    
                 entity_type, entity_id = entity_match.groups()
                 current_dict, current_key = stack[-1]
-                
                 
                 # Если мы находимся в корневом словаре, создаем новую сущность на верхнем уровне
                 if len(stack) == 1:  # Это корневой уровень
@@ -115,10 +121,17 @@ class DescLoader:
                     in_connections_block = False
                     in_characters_block = False
                     in_resources_block = False
-                    in_requires_block = False  # Сбрасываем флаг для REQUIRES
+                    in_requires_block = False
+                    in_improves_block = False
                 
                 # Особая обработка CONNECTION внутри блока CONNECTIONS
                 elif in_connections_block and entity_type == "CONNECTION":
+                    # Проверяем доступ к родительскому элементу
+                    if len(stack) < 2:
+                        # Если нет родительского элемента, пропускаем операцию
+                        i += 1
+                        continue
+                        
                     current_dict, current_key = stack[-1]
                     entity_parent_dict, _ = stack[-2]  # Словарь-родитель (локация)
                     
@@ -137,6 +150,12 @@ class DescLoader:
                 
                 # Особая обработка CHARACTER внутри блока CHARACTERS
                 elif in_characters_block and entity_type == "CHARACTER":
+                    # Проверяем доступ к родительскому элементу
+                    if len(stack) < 2:
+                        # Если нет родительского элемента, пропускаем операцию
+                        i += 1
+                        continue
+                        
                     current_dict, current_key = stack[-1]
                     entity_parent_dict, _ = stack[-2]  # Словарь-родитель (локация)
                     
@@ -164,6 +183,59 @@ class DescLoader:
                     # Добавляем в стек для обработки свойств ресурса
                     stack.append((current_dict[entity_id], entity_type))
                 
+                # Особая обработка REQ_ITEM внутри блока REQUIRES
+                elif in_requires_block and entity_type == "REQ_ITEM":
+                    current_dict, current_key = stack[-1]
+                    
+                    # Если это первый требуемый предмет, создаем словарь player_has_items
+                    if "player_has_items" not in current_dict:
+                        current_dict["player_has_items"] = {}
+                    
+                    # Вместо создания промежуточного словаря, добавляем заглушку
+                    # Позже заменим эту заглушку на фактическое значение количества
+                    current_dict["player_has_items"][entity_id] = 0
+                    
+                    # Добавляем в стек для обработки свойств требуемого предмета
+                    # Ключ будет содержать также ID предмета для последующего обновления
+                    stack.append((current_dict["player_has_items"], f"REQ_ITEM:{entity_id}"))
+                
+                # Особая обработка REQ_SKILL внутри блока REQUIRES
+                elif in_requires_block and entity_type == "REQ_SKILL":
+                    current_dict, current_key = stack[-1]
+                    
+                    # Если это первый требуемый навык, создаем словарь player_has_skill_level
+                    if "player_has_skill_level" not in current_dict:
+                        current_dict["player_has_skill_level"] = {}
+                    
+                    # Вместо создания промежуточного словаря, добавляем заглушку
+                    # Позже заменим эту заглушку на фактическое значение уровня
+                    current_dict["player_has_skill_level"][entity_id] = 0
+                    
+                    # Добавляем в стек для обработки свойств требуемого навыка
+                    # Ключ будет содержать также ID навыка для последующего обновления
+                    stack.append((current_dict["player_has_skill_level"], f"REQ_SKILL:{entity_id}"))
+                
+                # Особая обработка IMPROVES_SKILL внутри блока IMPROVES
+                elif in_improves_block and entity_type == "IMPROVES_SKILL":
+                    current_dict, current_key = stack[-1]
+                    
+                    # Если это первое улучшение навыка, создаем словарь improves_skills
+                    if "improves_skills" not in current_dict:
+                        current_dict["improves_skills"] = {}
+                    
+                    # Вместо создания промежуточного словаря, добавляем заглушку
+                    # Позже заменим эту заглушку на фактическое значение опыта
+                    current_dict["improves_skills"][entity_id] = 0
+                    
+                    # Добавляем в стек для обработки свойств улучшаемого навыка
+                    # Ключ будет содержать также ID навыка для последующего обновления
+                    stack.append((current_dict["improves_skills"], f"IMPROVES_SKILL:{entity_id}"))
+                    
+                    # Увеличиваем счетчик найденных привязок
+                    found_skill_improvements += 1
+                    
+                    print(f"Найдена привязка улучшения навыка {entity_id}")
+                
                 # Если мы внутри блока верхнего уровня
                 elif len(stack) == 2 and current_key and current_key.isupper():
                     if entity_id not in current_dict:
@@ -184,6 +256,10 @@ class DescLoader:
             # Проверяем начало блока (RESOURCES, CONNECTIONS, REQUIRES и т.д.)
             block_match = self.block_start_re.match(line)
             if block_match:
+                # Проверка на пустоту стека
+                if not stack:
+                    stack.append((result, None))  # Восстанавливаем стек если он пуст
+                    
                 block_type = block_match.group(1)
                 current_dict, _ = stack[-1]
         
@@ -206,6 +282,11 @@ class DescLoader:
                     in_requires_block = True
                     # Создаем словарь для требований
                     current_dict["requires"] = {}
+                elif block_type == "IMPROVES":
+                    # Новый блок для улучшений
+                    in_improves_block = True
+                    # Создаем словарь для улучшений
+                    current_dict["improves"] = {}
                 else:
                     # Для других блоков просто создаем обычный словарь
                     current_dict[block_type.lower()] = {}
@@ -218,6 +299,12 @@ class DescLoader:
             
             # Проверяем конец блока или сущности
             if self.block_end_re.match(line):
+                # Проверка на пустоту стека
+                if not stack:
+                    # Если стек пуст, пропускаем эту закрывающую скобку
+                    i += 1
+                    continue
+                    
                 # Извлекаем информацию о текущем уровне
                 current_dict, current_key = stack[-1]
                 
@@ -230,12 +317,15 @@ class DescLoader:
                     in_resources_block = False
                 elif in_requires_block and current_key == "REQUIRES":
                     in_requires_block = False
+                elif in_improves_block and current_key == "IMPROVES":
+                    in_improves_block = False
+                    # Логируем количество найденных привязок улучшений навыков
+                    if found_skill_improvements > 0:
+                        print(f"Всего найдено привязок улучшений навыков: {found_skill_improvements}")
+                        found_skill_improvements = 0
                 
-                # Если мы завершаем блок CONNECTION внутри CONNECTIONS,
-                # нам не нужно ничего делать, так как соединение уже добавлено в список
-                
-                # Убираем последний словарь из стека
-                popped = stack.pop()
+                # Убираем последний словарь из стека, но убедимся что в стеке останется как минимум один элемент
+                popped = stack.pop() if len(stack) > 1 else None
                 
                 i += 1
                 continue
@@ -243,12 +333,88 @@ class DescLoader:
             # Обрабатываем свойства (ключ: значение)
             property_match = self.property_re.match(line)
             if property_match:
+                # Проверка на пустоту стека
+                if not stack:
+                    stack.append((result, None))  # Восстанавливаем стек если он пуст
+                    
                 key, value = property_match.groups()
-                current_dict, _ = stack[-1]
+                current_dict, current_key = stack[-1]
                 
-                # Обрабатываем значение
-                parsed_value = self._parse_value(value)
-                current_dict[key] = parsed_value
+                # Преобразуем ключ level в числовое значение для REQ_SKILL
+                if key == "level":
+                    try:
+                        # Получаем числовое значение уровня
+                        level_value = self._parse_value(value)
+                        
+                        # Извлекаем ID навыка из ключа текущего контекста
+                        _, current_key = stack[-1]
+                        if current_key and ":" in current_key:
+                            _, skill_id = current_key.split(":", 1)
+                            
+                            # Получаем родительский словарь (requires)
+                            parent_dict, _ = stack[-2]
+                            
+                            # Убедимся, что словарь player_has_skill_level существует
+                            if "player_has_skill_level" not in parent_dict:
+                                parent_dict["player_has_skill_level"] = {}
+                                
+                            # Устанавливаем уровень навыка
+                            parent_dict["player_has_skill_level"][skill_id] = level_value
+                    except Exception as e:
+                        print(f"Ошибка при обработке уровня навыка: {e}")
+                        
+                # Преобразуем ключ amount в числовое значение для REQ_ITEM
+                elif key == "amount":
+                    try:
+                        # Получаем числовое значение количества
+                        amount_value = self._parse_value(value)
+                        
+                        # Извлекаем ID предмета из ключа текущего контекста
+                        _, current_key = stack[-1]
+                        if current_key and ":" in current_key:
+                            _, item_id = current_key.split(":", 1)
+                            
+                            # Получаем родительский словарь (requires)
+                            parent_dict, _ = stack[-2]
+                            
+                            # Убедимся, что словарь player_has_items существует
+                            if "player_has_items" not in parent_dict:
+                                parent_dict["player_has_items"] = {}
+                                
+                            # Устанавливаем количество предмета
+                            parent_dict["player_has_items"][item_id] = amount_value
+                    
+                    except Exception as e:
+                        print(f"Ошибка при обработке количества предмета: {e}")
+                    
+                # Обработка опыта для IMPROVES_SKILL
+                elif key == "exp":
+                    try:
+                        # Получаем числовое значение опыта
+                        exp_value = self._parse_value(value)
+                        
+                        # Извлекаем ID навыка из ключа текущего контекста
+                        _, current_key = stack[-1]
+                        if current_key and ":" in current_key:
+                            _, skill_id = current_key.split(":", 1)
+                            
+                            # Получаем родительский словарь (improves)
+                            parent_dict, _ = stack[-2]
+                            
+                            # Убедимся, что словарь improves_skills существует
+                            if "improves_skills" not in parent_dict:
+                                parent_dict["improves_skills"] = {}
+                                
+                            # Устанавливаем опыт для навыка
+                            parent_dict["improves_skills"][skill_id] = exp_value
+                    
+                    except Exception as e:
+                        print(f"Ошибка при обработке опыта для навыка: {e}")
+                # Обычная обработка свойств
+                else:
+                    # Обрабатываем значение
+                    parsed_value = self._parse_value(value)
+                    current_dict[key] = parsed_value
                 
                 i += 1
                 continue

@@ -1,6 +1,7 @@
 from typing import Dict, List, Callable, Any, Optional, Type, TypeVar, Generic
 from functools import wraps
 from dataclasses import dataclass
+from src.utils.Logger import Logger
 
 E = TypeVar('E')
 
@@ -39,7 +40,7 @@ class EventSystem:
         self._is_emitting = False
         self._pending_unsubscribes: List[tuple] = []
         self._event_metadata: Dict[str, EventMetadata] = {}
-    
+        self._logger = Logger()
     def subscribe(self, event_name: str, callback: Callable) -> None:
         """
         Подписаться на событие
@@ -97,7 +98,7 @@ class EventSystem:
                 try:
                     callback(*args, **kwargs)
                 except Exception as e:
-                    print(f"Ошибка при обработке события {event_name}: {str(e)}")
+                    self._logger.error(f"Ошибка при обработке события {event_name}: {str(e)}")
         
         self._is_emitting = False
         

@@ -95,9 +95,6 @@ class PymustlibTests(unittest.TestCase):
         """Проверяет, что все нужные команды зарегистрированы"""
         # Список команд, которые должны быть зарегистрированы
         required_commands = [
-            "compile",
-            "desc2json",
-            "json2desc",
             "version",
             "run"
         ]

@@ -1,4 +1,6 @@
-class SimpleItem:
+from src.models.interfaces.Serializable import Serializable
+
+class SimpleItem(Serializable):
     def __init__(self, name, description="", item_id=None):
         self.name = name
         self.description = description

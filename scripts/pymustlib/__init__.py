@@ -106,72 +106,8 @@ def get_pymust_version() -> str:
     except Exception as e:
         return "0.1.0"  # Версия по умолчанию
 
-# Команды для работы с ресурсами
-def compile_resources_command(args: List[str]) -> int:
-    """Компилирует все .desc файлы в JSON"""
-    print(f"{Colors.BRIGHT_CYAN}Компиляция ресурсов...{Colors.RESET}")
-    
-    parser = argparse.ArgumentParser(description="Компилирует файлы .desc в JSON")
-    parser.add_argument("--force", action="store_true", help="Принудительная компиляция всех файлов")
-    parser.add_argument("--create-example", action="store_true", help="Создать пример .desc файла")
-    
-    # Парсим только известные аргументы
-    parsed_args, _ = parser.parse_known_args(args)
-    
-    # Импортируем модуль compile_resources.py
-    compile_resources_module = import_module_from_file(
-        str(SCRIPTS_DIR / "compile_resources.py"), 
-        "compile_resources"
-    )
-    
-    # Вызываем функцию компиляции
-    start_time = compile_resources_module.time.time()
-    compiled, total = compile_resources_module.compile_resources(parsed_args.force)
-    end_time = compile_resources_module.time.time()
-    
-    print(f"{Colors.BRIGHT_GREEN}Компиляция завершена за {Colors.BRIGHT_YELLOW}{end_time - start_time:.2f}{Colors.BRIGHT_GREEN} секунд.{Colors.RESET}")
-    print(f"{Colors.BRIGHT_GREEN}Скомпилировано {Colors.BRIGHT_YELLOW}{compiled}{Colors.BRIGHT_GREEN} из {Colors.BRIGHT_YELLOW}{total}{Colors.BRIGHT_GREEN} файлов.{Colors.RESET}")
-    
-    # Если нет .desc файлов и указан флаг create-example, создаем пример
-    if total == 0 and parsed_args.create_example:
-        compile_resources_module.create_example_desc()
-        print(f"{Colors.BRIGHT_GREEN}Создан пример .desc файла{Colors.RESET}")
-    
-    return 0
-
-def desc_to_json_command(args: List[str]) -> int:
-    """Преобразует файл .desc в JSON"""
-    print(f"{Colors.BRIGHT_CYAN}Преобразование .desc в JSON...{Colors.RESET}")
-    
-    parser = argparse.ArgumentParser(description="Преобразует файл .desc в JSON")
-    parser.add_argument("input", help="Путь к входному файлу .desc")
-    parser.add_argument("output", help="Путь к выходному файлу JSON")
-    parser.add_argument("--dir", action="store_true", help="Обработать целую директорию")
-    
-    # Парсим только известные аргументы
-    parsed_args, _ = parser.parse_known_args(args)
-    
-    # Импортируем модуль desc_to_json.py
-    desc_to_json_module = import_module_from_file(
-        str(SCRIPTS_DIR / "desc_to_json.py"), 
-        "desc_to_json"
-    )
-    
-    # Вызываем соответствующую функцию
-    if parsed_args.dir:
-        converted, total = desc_to_json_module.convert_directory(parsed_args.input, parsed_args.output)
-        print(f"{Colors.BRIGHT_GREEN}Преобразовано {Colors.BRIGHT_YELLOW}{converted}{Colors.BRIGHT_GREEN} из {Colors.BRIGHT_YELLOW}{total}{Colors.BRIGHT_GREEN} файлов из директории {Colors.BRIGHT_YELLOW}{parsed_args.input}{Colors.RESET}")
-    else:
-        if desc_to_json_module.convert_file(parsed_args.input, parsed_args.output):
-            print(f"{Colors.BRIGHT_GREEN}Файл {Colors.BRIGHT_YELLOW}{parsed_args.input}{Colors.BRIGHT_GREEN} успешно преобразован в {Colors.BRIGHT_YELLOW}{parsed_args.output}{Colors.RESET}")
-        else:
-            print(f"{Colors.BRIGHT_RED}Ошибка при преобразовании файла {parsed_args.input}{Colors.RESET}")
-            return 1
-    
-    return 0
-
 def print_logo():
-    """Выводит логотип фреймворка Pymust"""
+    """Выводит логотип Pymust"""
     print(f"{Colors.BRIGHT_GREEN}")
     print("  _____        __  __ _    _  _____ _______")
     print(" |  __ \\      |  \\/  | |  | |/ ____|__   __|")
@@ -182,40 +118,6 @@ def print_logo():
     print("          __/ |                              ")
     print("         |___/                               ")
     print(f"{Colors.RESET}")
-
-def json_to_desc_command(args: List[str]) -> int:
-    """Преобразует JSON файл в формат .desc"""
-    print(f"{Colors.BRIGHT_CYAN}Преобразование JSON в .desc...{Colors.RESET}")
-    
-    parser = argparse.ArgumentParser(description="Преобразует JSON файл в формат .desc")
-    parser.add_argument("input", help="Путь к входному файлу JSON")
-    parser.add_argument("output", help="Путь к выходному файлу .desc")
-    parser.add_argument("--dir", action="store_true", help="Обработать целую директорию")
-    
-    # Парсим только известные аргументы
-    parsed_args, _ = parser.parse_known_args(args)
-    
-    # Импортируем модуль json_to_desc.py
-    json_to_desc_module = import_module_from_file(
-        str(SCRIPTS_DIR / "json_to_desc.py"), 
-        "json_to_desc"
-    )
-    
-    # Вызываем соответствующую функцию
-    if parsed_args.dir:
-        # Предполагаем, что в модуле есть функция convert_directory
-        converted, total = json_to_desc_module.convert_directory(parsed_args.input, parsed_args.output)
-        print(f"{Colors.BRIGHT_GREEN}Преобразовано {Colors.BRIGHT_YELLOW}{converted}{Colors.BRIGHT_GREEN} из {Colors.BRIGHT_YELLOW}{total}{Colors.BRIGHT_GREEN} файлов из директории {Colors.BRIGHT_YELLOW}{parsed_args.input}{Colors.RESET}")
-    else:
-        # Создаем конвертер и вызываем его
-        converter = json_to_desc_module.JsonToDescConverter()
-        if converter.convert_file(parsed_args.input, parsed_args.output):
-            print(f"{Colors.BRIGHT_GREEN}Файл {Colors.BRIGHT_YELLOW}{parsed_args.input}{Colors.BRIGHT_GREEN} успешно преобразован в {Colors.BRIGHT_YELLOW}{parsed_args.output}{Colors.RESET}")
-        else:
-            print(f"{Colors.BRIGHT_RED}Ошибка при преобразовании файла {parsed_args.input}{Colors.RESET}")
-            return 1
-    
-    return 0
 
 def update_version_command(args: List[str]) -> int:
     """Обновляет версию игры, движка или pymust"""
@@ -292,7 +194,7 @@ def install_vscode_extension_command(args: List[str]) -> int:
     
     if install_extension():
         print(f"{Colors.BRIGHT_GREEN}Расширение успешно установлено!{Colors.RESET}")
-        print(f"\n{Colors.BRIGHT_WHITE}Теперь файлы .desc будут поддерживать подсветку синтаксиса в VSCode.{Colors.RESET}")
+        print(f"\n{Colors.BRIGHT_WHITE}Теперь файлы .desc будут поддерживать подсветку синтаксиса в VSCode и Cursor.{Colors.RESET}")
         return 0
     else:
         print(f"{Colors.BRIGHT_RED}Ошибка при установке расширения.{Colors.RESET}")

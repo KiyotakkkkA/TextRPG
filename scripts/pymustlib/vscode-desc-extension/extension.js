@@ -12,6 +12,7 @@ function activate(context) {
     "LOCATION",
     "ITEM",
     "CHARACTER",
+    "IMPROVES",
     "RESOURCE",
     "CONNECTION",
     "EFFECT",
@@ -25,6 +26,9 @@ function activate(context) {
     "INVENTORY",
     "EFFECTS",
     "TOPIC",
+    "REQ_SKILL",
+    "REQ_ITEM",
+    "IMPROVES_SKILL",
   ];
 
   // Типы блоков и их свойства
@@ -124,11 +128,6 @@ function activate(context) {
         type: "number",
       },
       {
-        name: "player_has_items",
-        detail: "Требуемые предметы игрока",
-        type: "array",
-      },
-      {
         name: "player_has_gold",
         detail: "Требуемое количество золота",
         type: "number",
@@ -138,6 +137,13 @@ function activate(context) {
         detail: "Требуемый завершенный квест",
         type: "string",
       },
+    ],
+    REQ_SKILL: [{ name: "level", detail: "Уровень навыка", type: "number" }],
+    REQ_ITEM: [
+      { name: "amount", detail: "Количество предметов", type: "number" },
+    ],
+    IMPROVES_SKILL: [
+      { name: "exp", detail: "Количество опыта", type: "number" },
     ],
   };
 

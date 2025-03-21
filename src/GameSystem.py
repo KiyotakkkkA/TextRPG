@@ -1,5 +1,6 @@
 from src.loaders.ItemsLoader import ItemsLoader
 from src.loaders.LocationsLoader import LocationsLoader
+from src.loaders.SkillsLoader import SkillsLoader
 from src.utils.Logger import Logger
 from src.models.Player import Player
 from src.utils.PreLoader import PreLoader
@@ -26,6 +27,9 @@ class GameSystem(Serializable):
         self.current_location_id = None
         self.current_region_id = None  # Текущий регион
         
+        # Создаем загрузчик навыков
+        self.skills_loader = SkillsLoader()
+        
         # Создаем игрока
         self.player = Player(self, "Player")
         
@@ -50,6 +54,9 @@ class GameSystem(Serializable):
             },
             tags=["player", "inventory", "items"]
         )
+        
+        # Подписываемся на событие получения предмета для обработки улучшений навыков
+        self.event_system.subscribe("player_took_item", self.process_item_skill_improvements)
         
         # Другие события
         self.event_system.register_event(
@@ -108,13 +115,123 @@ class GameSystem(Serializable):
             tags=["location", "resources"]
         )
         
+        # События для системы навыков
+        self.event_system.register_event(
+            event_name="player_unlocked_skill",
+            description="Вызывается, когда игрок разблокирует новый навык",
+            params={
+                "skill": "Информация о навыке (словарь)"
+            },
+            tags=["player", "skills", "progression"]
+        )
+        
+        self.event_system.register_event(
+            event_name="player_skill_levelup",
+            description="Вызывается, когда навык игрока повышает уровень",
+            params={
+                "skill": "Информация о навыке (словарь)",
+                "new_level": "Новый уровень навыка"
+            },
+            tags=["player", "skills", "progression"]
+        )
+        
+        self.event_system.register_event(
+            event_name="player_used_skill",
+            description="Вызывается, когда игрок использует навык",
+            params={
+                "skill": "Информация о навыке (словарь)",
+                "args": "Позиционные аргументы для навыка",
+                "kwargs": "Именованные аргументы для навыка"
+            },
+            tags=["player", "skills", "action"]
+        )
+        
     def preload(self):
         """
         Загружает все необходимые данные для игры.
         """
         self.logger.info("GameSystem: Загрузка данных игры...")
+        
+        # Загружаем навыки
+        self.logger.info("GameSystem: Загрузка навыков...")
+        self.skills_loader.load()
+        
+        # Загружаем остальные данные
         self.preloader.load()
+        
         self.logger.info("GameSystem: Загрузка данных завершена!")
+    
+    def get_skills_loader(self) -> SkillsLoader:
+        """
+        Возвращает загрузчик навыков.
+        
+        Returns:
+            SkillsLoader: Загрузчик навыков
+        """
+        return self.skills_loader
+    
+    def get_skill(self, skill_id: str):
+        """
+        Возвращает навык по его ID.
+        
+        Args:
+            skill_id (str): ID навыка
+            
+        Returns:
+            SimpleSkill: Навык или None, если навык не найден
+        """
+        return self.skills_loader.get_skill(skill_id)
+    
+    def get_all_skills(self):
+        """
+        Возвращает словарь всех навыков.
+        
+        Returns:
+            dict: Словарь всех навыков (id -> навык)
+        """
+        return self.skills_loader.get_all_skills()
+    
+    def get_skill_group(self, group_id: str):
+        """
+        Возвращает группу навыков по её ID.
+        
+        Args:
+            group_id (str): ID группы
+            
+        Returns:
+            SkillGroup: Группа навыков или None, если группа не найдена
+        """
+        return self.skills_loader.get_group(group_id)
+    
+    def get_all_skill_groups(self):
+        """
+        Возвращает словарь всех групп навыков.
+        
+        Returns:
+            dict: Словарь всех групп навыков (id -> группа)
+        """
+        return self.skills_loader.get_all_groups()
+    
+    def get_skills_by_group(self, group_id: str):
+        """
+        Возвращает список навыков в указанной группе.
+        
+        Args:
+            group_id (str): ID группы
+            
+        Returns:
+            list: Список навыков в группе
+        """
+        return self.skills_loader.get_skills_by_group(group_id)
+    
+    def get_ordered_skill_groups(self):
+        """
+        Возвращает список групп навыков, отсортированный по порядку отображения.
+        
+        Returns:
+            list: Отсортированный список групп
+        """
+        return self.skills_loader.get_ordered_groups()
     
     def get_version_info(self):
         """Возвращает словарь с информацией о версии игры и движка"""
@@ -153,6 +270,18 @@ class GameSystem(Serializable):
             return None
         
         return self.get_region(self.current_region_id)
+    
+    def get_skill(self, skill_id):
+        """
+        Возвращает навык по его ID.
+        
+        Args:
+            skill_id (str): ID навыка
+            
+        Returns:
+            SimpleSkill: Навык или None, если навык не найден
+        """
+        return self.skills_loader.get_skill(skill_id)
     
     def get_location(self, location_id):
         """
@@ -349,48 +478,64 @@ class GameSystem(Serializable):
         self.logger.info(f"Игрок перемещен в регион {new_region.name}, локация: {starting_location.name}")
         return True
     
-    def collect_resource(self, resource_id, amount=1):
+    def collect_resource(self, resource_id, amount=None):
         """
-        Собирает ресурс с текущей локации и добавляет в инвентарь игрока.
+        Собирает ресурс с текущей локации.
         
         Args:
-            resource_id (str): ID ресурса
-            amount (int): Количество для сбора
+            resource_id: ID ресурса для сбора
+            amount: Количество ресурса для сбора (если None, собирает всё доступное количество)
             
         Returns:
-            int: Фактическое количество собранного ресурса
+            int: Количество собранного ресурса
         """
-        current_location = self.get_current_location()
-        if not current_location:
-            self.logger.error("Текущая локация не определена!")
+        try:
+            # Получаем текущую локацию
+            location = self.get_current_location()
+            if not location:
+                return 0
+                
+            # Получаем данные о ресурсе
+            item_data = self.get_item(resource_id)
+            if not item_data:
+                return 0
+                
+            # Проверяем требования для сбора ресурса
+            if not self.check_resource_requirements(resource_id):
+                self.logger.info(f"Не удалось собрать ресурс {resource_id} - не выполнены требования")
+                return 0
+                
+            # Определяем количество для сбора
+            if amount is None:
+                # Если количество не указано, собираем все доступные ресурсы
+                amount = location.available_resources.get(resource_id, 0)
+            
+            # Собираем ресурс
+            collected = location.collect_resource(resource_id, amount)
+            if collected <= 0:
+                return 0
+                
+            # Получаем название ресурса
+            resource_name = item_data.get("name", resource_id)
+            
+            # Добавляем ресурс в инвентарь игрока
+            self.player.add_item_by_id(resource_id, collected)
+            
+            # Отправляем событие сбора ресурса
+            self.event_system.emit("player_collected_resource", {
+                "resource_id": resource_id,
+                "resource_name": resource_name,
+                "amount": collected,
+                "location_id": location.id
+            })
+            
+            # Обрабатываем навыки, связанные с этим предметом
+            self.process_item_skill_improvements(item_data)
+            return collected
+            
+        except Exception as e:
+            self.logger.error(f"Ошибка при сборе ресурса {resource_id}: {str(e)}", exc_info=True)
             return 0
-        
-        # Получаем данные предмета, чтобы узнать его имя для события
-        item_data = self.get_item(resource_id)
-        if not item_data:
-            self.logger.error(f"Предмет {resource_id} не найден!")
-            return 0
-        
-        # Собираем ресурс с локации
-        collected = current_location.collect_resource(resource_id, amount)
-        if collected <= 0:
-            self.logger.error(f"Ресурс {resource_id} недоступен на локации {current_location.id}!")
-            return 0
-        
-        # Добавляем в инвентарь
-        self.player.add_item_by_id(resource_id, collected)
-        
-        # Вызываем событие сбора ресурса
-        self.event_system.emit(
-            "player_collected_resource",
-            resource_id,
-            item_data.get("name", resource_id),
-            collected,
-            current_location.id
-        )
-        
-        self.logger.info(f"Игрок собрал {collected} {item_data.get('name', resource_id)}")
-        return collected
     
     @define_event(
         name="player_level_up",
@@ -408,6 +553,9 @@ class GameSystem(Serializable):
         self.logger.info(f"Игрок повысил уровень с {old_level} до {new_level}!")
         # Логика обработки повышения уровня
         
+        # Обновляем доступные навыки
+        self.player.update_skills()
+        
     def get_item(self, itemID: str):
         """Возвращает данные предмета по его ID"""
         if not itemID:
@@ -420,7 +568,7 @@ class GameSystem(Serializable):
             return self.preloader.ATLAS["ITEMS"][itemID]
         
         return None
-    
+
     def update(self, dt):
         """
         Обновляет состояние игры.
@@ -448,10 +596,12 @@ class GameSystem(Serializable):
             # Сохраняем ссылки на несериализуемые объекты, чтобы потом восстановить
             original_logger = self.logger
             original_event_system = self.event_system
+            original_skills_loader = self.skills_loader
             
             # Временно устанавливаем None для несериализуемых объектов
             self.logger = None
             self.event_system = None
+            self.skills_loader = None
             
             # Также отключаем ссылки на game_system в объектах
             original_player_game = self.player.game
@@ -466,6 +616,7 @@ class GameSystem(Serializable):
             # Восстанавливаем ссылки
             self.logger = original_logger
             self.event_system = original_event_system
+            self.skills_loader = original_skills_loader
             self.player.game = original_player_game
             self.player.game_system = original_player_game_system
             
@@ -495,6 +646,8 @@ class GameSystem(Serializable):
             # Восстанавливаем ссылки на несериализуемые объекты
             game_system.logger = Logger()
             game_system.event_system = get_event_system()
+            game_system.skills_loader = SkillsLoader()
+            game_system.skills_loader.load()
             
             # Восстанавливаем ссылки в объектах
             game_system.player.game = game_system
@@ -509,3 +662,85 @@ class GameSystem(Serializable):
         except Exception as e:
             print(f"Ошибка при загрузке игры: {str(e)}")
             return None
+
+    def process_item_skill_improvements(self, item_data):
+        """
+        Обрабатывает улучшения навыков при получении предмета.
+        Если предмет имеет блок IMPROVES с указанием навыков и опыта,
+        то добавляет соответствующее количество опыта каждому навыку.
+        
+        Args:
+            item_data: Данные предмета со счетчиком количества
+        """
+        if not item_data or not isinstance(item_data, dict):
+            return
+        
+        # Получаем ID предмета и количество
+        item_id = item_data.get("id")
+        count = item_data.get("count", 1)
+        
+        if not item_id:
+            return
+        
+        # Получаем полные данные о предмете
+        item_full_data = self.get_item(item_id)
+        if not item_full_data:
+            return
+        
+        # Проверяем наличие блока улучшений
+        improves = item_full_data.get("improves")
+        if not improves:
+            return
+        
+        # Обрабатываем улучшения навыков
+        skill_improvements = improves.get("improves_skills")
+        if not skill_improvements:
+            return
+        
+        self.logger.info(f"Обрабатываем улучшения навыков для предмета {item_id} (x{count})")
+        
+        # Для каждого навыка добавляем опыт
+        for skill_id, exp_amount in skill_improvements.items():
+            # Умножаем опыт на количество предметов
+            total_exp = exp_amount * count
+            
+            # Добавляем опыт навыку
+            level_up = self.player.add_skill_experience(skill_id, total_exp)
+            
+            skill_name = skill_id
+            skill = self.player.get_skill(skill_id)
+            if skill:
+                skill_name = skill.name
+            
+            self.logger.info(f"Добавлено {total_exp} опыта навыку {skill_name}")
+            
+            # Если произошло повышение уровня, логируем это
+            if level_up:
+                self.logger.info(f"Повышен уровень навыка {skill_name} до {skill.level}")
+
+    def check_resource_requirements(self, resource_id: str) -> bool:
+        """
+        Проверяет, выполняются ли требования для сбора ресурса.
+        
+        Args:
+            resource_id (str): ID ресурса
+            
+        Returns:
+            bool: True, если требования выполнены, иначе False
+        """
+        # Получаем данные о ресурсе
+        item_data = self.get_item(resource_id)
+        if not item_data:
+            return False
+            
+        # Получаем текущую локацию
+        location = self.get_current_location()
+        if not location:
+            return False
+            
+        # Проверяем требования, если они есть
+        if "requires" in item_data:
+            return location.check_requirements(item_data["requires"], self.player, self)
+            
+        # Если требования не указаны, считаем их выполненными
+        return True

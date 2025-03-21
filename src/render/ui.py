@@ -12,45 +12,72 @@ class Panel(UIElement):
     """
     def __init__(self, x: int, y: int, width: int, height: int, title: str = "", 
                  border: bool = True, border_color: str = Color.WHITE, 
-                 bg_color: str = "", title_color: str = Color.BRIGHT_WHITE):
+                 bg_color: str = "", title_color: str = Color.BRIGHT_WHITE,
+                 active_border_color: str = Color.BRIGHT_YELLOW):
         super().__init__(x, y, width, height)
         self.title = title
         self.border = border
         self.border_color = border_color
+        self.active_border_color = active_border_color
         self.bg_color = bg_color
         self.title_color = title_color
+        self.bind_for = None  # Меню, к которому привязана панель
+    
+    def set_bind_for(self, menu: 'Menu'):
+        """
+        Привязывает панель к меню для подсветки активного состояния.
+        
+        Args:
+            menu (Menu): Меню, к которому привязывается панель
+        """
+        self.bind_for = menu
+        self.mark_for_redraw()
     
     def render(self):
+        """
+        Отрисовывает панель.
+        """
         if not self.visible:
             return
+            
+        # Определяем текущий цвет границы
+        current_border_color = self.border_color
         
-        # Если есть фон, заполняем его
+        # Если панель привязана к меню и меню имеет фокус, используем активный цвет
+        if self.bind_for and hasattr(self.bind_for, 'isFocused') and self.bind_for.isFocused:
+            current_border_color = self.active_border_color
+        
         if self.bg_color:
             for y in range(self.height):
                 ConsoleHelper.move_cursor(self.x, self.y + y)
-                print(f"{self.bg_color}{' ' * self.width}{Color.RESET}", end='')
+                print(f"{self.bg_color}{' ' * self.width}{Color.RESET}", end="")
         
-        # Рисуем границу, если нужно
         if self.border:
-            # Горизонтальные линии
+            # Верхняя граница
             ConsoleHelper.move_cursor(self.x, self.y)
-            print(ConsoleHelper.colorize('┌' + '─' * (self.width - 2) + '┐', self.border_color), end='')
+            print(f"{current_border_color}┌{'─' * (self.width - 2)}┐{Color.RESET}", end="")
             
-            ConsoleHelper.move_cursor(self.x, self.y + self.height - 1)
-            print(ConsoleHelper.colorize('└' + '─' * (self.width - 2) + '┘', self.border_color), end='')
-            
-            # Вертикальные линии
+            # Боковые границы
             for y in range(1, self.height - 1):
                 ConsoleHelper.move_cursor(self.x, self.y + y)
-                print(ConsoleHelper.colorize('│', self.border_color), end='')
+                print(f"{current_border_color}│{Color.RESET}", end="")
                 ConsoleHelper.move_cursor(self.x + self.width - 1, self.y + y)
-                print(ConsoleHelper.colorize('│', self.border_color), end='')
+                print(f"{current_border_color}│{Color.RESET}", end="")
             
-            # Заголовок, если есть
-            if self.title:
-                title_x = self.x + (self.width - len(self.title)) // 2
-                ConsoleHelper.move_cursor(title_x, self.y)
-                print(ConsoleHelper.colorize(f" {self.title} ", self.title_color, self.bg_color), end='')
+            # Нижняя граница
+            ConsoleHelper.move_cursor(self.x, self.y + self.height - 1)
+            print(f"{current_border_color}└{'─' * (self.width - 2)}┘{Color.RESET}", end="")
+        
+        # Если есть заголовок, отображаем его
+        if self.title:
+            # Вычисляем позицию заголовка для центрирования
+            title_position = self.x + max(1, (self.width - len(self.title)) // 2)
+            if self.border:
+                ConsoleHelper.move_cursor(title_position - 1, self.y)
+                print(f"{current_border_color}┤{self.title_color}{self.title}{current_border_color}├{Color.RESET}", end="")
+            else:
+                ConsoleHelper.move_cursor(title_position, self.y)
+                print(f"{self.title_color}{self.title}{Color.RESET}", end="")
 
 class Label(UIElement):
     """
@@ -187,6 +214,7 @@ class Menu(UIElement):
         self.selected_bg_color = selected_bg_color
         self.title_color = title_color
         self.selected_index = 0
+        self.isFocused = True  # По умолчанию меню в фокусе
         self._effective_height = len(items) if items else 1
         self._formatted_texts = []  # Строки текста для каждого пункта меню
         self._format_item_texts()
@@ -562,6 +590,10 @@ class Menu(UIElement):
         Returns:
             bool: True, если клавиша была обработана
         """
+        # Обрабатываем ввод только если меню в фокусе
+        if not self.isFocused:
+            return False
+            
         if not self.items:
             return False
             
@@ -655,6 +687,16 @@ class Menu(UIElement):
         if self.items and 0 <= self.selected_index < len(self.items):
             if self.items[self.selected_index].enabled and self.items[self.selected_index].text:
                 self.items[self.selected_index].activate()
+
+    def setFocused(self, value: bool):
+        """
+        Устанавливает состояние фокуса для меню.
+        
+        Args:
+            value (bool): True, если меню должно быть в фокусе, иначе False
+        """
+        self.isFocused = value
+        self.mark_for_redraw()
 
 class ProgressBar(UIElement):
     """

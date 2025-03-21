@@ -60,14 +60,6 @@ def main():
     engine.auto_render = False  # Отключаем автоматический рендеринг
     engine.render_on_update = False  # Рендерим только при необходимости
     
-    # Создание и регистрация экранов
-    main_menu = MainMenuScreen(engine, "TextRPG Adventure")
-    game_screen = GameScreen(engine)
-    update_screen = UpdateScreen(engine)
-    
-    # Устанавливаем ссылку на игровую систему в игровой экран
-    game_screen.set_game_system(game_system)
-    
     # Модификация обработчиков меню, чтобы они работали с игровой системой
     def on_new_game():
         """
@@ -103,6 +95,18 @@ def main():
         print("Загрузка игры...")
         # Здесь будет код загрузки
         engine.set_current_screen("game")
+        
+    # Обновляем информацию о навыках игрока
+        
+    game_system.player.update_skills()
+        
+    # Создание и регистрация экранов
+    main_menu = MainMenuScreen(engine, "TextRPG Adventure")
+    game_screen = GameScreen(engine)
+    update_screen = UpdateScreen(engine)
+    
+    # Устанавливаем ссылку на игровую систему в игровой экран
+    game_screen.set_game_system(game_system)
     
     # Назначаем новые обработчики
     main_menu.on_new_game = on_new_game
